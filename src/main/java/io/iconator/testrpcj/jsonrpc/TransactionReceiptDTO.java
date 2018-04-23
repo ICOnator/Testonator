@@ -16,7 +16,7 @@
  * along with Ethereum Harmony.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.iconator.commons.test.jsonrpc;
+package io.iconator.testrpcj.jsonrpc;
 
 import lombok.Value;
 import lombok.experimental.NonFinal;
@@ -25,7 +25,7 @@ import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.vm.LogInfo;
 
-import static io.iconator.commons.test.jsonrpc.TypeConverter.toJsonHex;
+import static io.iconator.testrpcj.jsonrpc.TypeConverter.toJsonHex;
 
 /**
  * Created by Ruben on 5/1/2016.
@@ -48,19 +48,19 @@ public class TransactionReceiptDTO {
     public TransactionReceiptDTO(Block block, TransactionInfo txInfo){
         TransactionReceipt receipt = txInfo.getReceipt();
 
-        transactionHash = toJsonHex(receipt.getTransaction().getHash());
-        transactionIndex = toJsonHex(new Integer(txInfo.getIndex()).longValue());
-        cumulativeGasUsed = toJsonHex(receipt.getCumulativeGas());
-        gasUsed = toJsonHex(receipt.getGasUsed());
+        transactionHash = TypeConverter.toJsonHex(receipt.getTransaction().getHash());
+        transactionIndex = TypeConverter.toJsonHex(new Integer(txInfo.getIndex()).longValue());
+        cumulativeGasUsed = TypeConverter.toJsonHex(receipt.getCumulativeGas());
+        gasUsed = TypeConverter.toJsonHex(receipt.getGasUsed());
         if (receipt.getTransaction().getContractAddress() != null) {
-            contractAddress = toJsonHex(receipt.getTransaction().getContractAddress());
+            contractAddress = TypeConverter.toJsonHex(receipt.getTransaction().getContractAddress());
         } else {
             contractAddress = null;
         }
         logs = new JsonRpc.LogFilterElement[receipt.getLogInfoList().size()];
         if (block != null) {
-            blockNumber = toJsonHex(block.getNumber());
-            blockHash = toJsonHex(txInfo.getBlockHash());
+            blockNumber = TypeConverter.toJsonHex(block.getNumber());
+            blockHash = TypeConverter.toJsonHex(txInfo.getBlockHash());
         } else {
             blockNumber = null;
             blockHash = null;

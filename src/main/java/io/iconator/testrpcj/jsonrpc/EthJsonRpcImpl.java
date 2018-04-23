@@ -16,7 +16,7 @@
  * along with Ethereum Harmony.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.iconator.commons.test.jsonrpc;
+package io.iconator.testrpcj.jsonrpc;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -52,7 +52,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static io.iconator.commons.test.jsonrpc.TypeConverter.*;
 import static org.ethereum.util.ByteUtil.*;
 
 /**
@@ -229,7 +228,7 @@ public class EthJsonRpcImpl implements JsonRpc {
         } else if ("pending".equalsIgnoreCase(id)) {
             return null;
         } else {
-            long blockNumber = StringHexToBigInteger(id).longValue();
+            long blockNumber = TypeConverter.StringHexToBigInteger(id).longValue();
             return blockchain.getBlockByNumber(blockNumber);
         }
     }
@@ -285,7 +284,7 @@ public class EthJsonRpcImpl implements JsonRpc {
     }
 
     public String eth_coinbase() {
-        return toJsonHex(blockchain.getMinerCoinbase());
+        return TypeConverter.toJsonHex(blockchain.getMinerCoinbase());
     }
 
     public boolean eth_mining() {
@@ -323,9 +322,9 @@ public class EthJsonRpcImpl implements JsonRpc {
 
     @Override
     public String eth_getStorageAt(String address, String storageIdx, String blockId) throws Exception {
-        byte[] addressAsByteArray = StringHexToByteArray(address);
+        byte[] addressAsByteArray = TypeConverter.StringHexToByteArray(address);
         DataWord storageValue = getRepoByJsonBlockId(blockId).
-                getStorageValue(addressAsByteArray, new DataWord(StringHexToByteArray(storageIdx)));
+                getStorageValue(addressAsByteArray, new DataWord(TypeConverter.StringHexToByteArray(storageIdx)));
         return storageValue != null ? TypeConverter.toJsonHex(storageValue.getData()) : null;
     }
 
@@ -415,16 +414,16 @@ public class EthJsonRpcImpl implements JsonRpc {
 
         // convert zero to empty byte array
         // TEMP, until decide for better behavior
-        final BigInteger valueBigInt = args.value != null ? StringHexToBigInteger(args.value) : BigInteger.ZERO;
+        final BigInteger valueBigInt = args.value != null ? TypeConverter.StringHexToBigInteger(args.value) : BigInteger.ZERO;
         final byte[] value = !valueBigInt.equals(BigInteger.ZERO) ? bigIntegerToBytes(valueBigInt) : EMPTY_BYTE_ARRAY;
 
         final Transaction tx = new Transaction(
-                args.nonce != null ? StringHexToByteArray(args.nonce) : bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
-                args.gasPrice != null ? StringHexToByteArray(args.gasPrice) : ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
-                args.gas != null ? StringHexToByteArray(args.gas) : longToBytes(90_000),
-                args.to != null ? StringHexToByteArray(args.to) : EMPTY_BYTE_ARRAY,
+                args.nonce != null ? TypeConverter.StringHexToByteArray(args.nonce) : bigIntegerToBytes(pendingState.getRepository().getNonce(account.getAddress())),
+                args.gasPrice != null ? TypeConverter.StringHexToByteArray(args.gasPrice) : ByteUtil.longToBytesNoLeadZeroes(50_000_000_000L),
+                args.gas != null ? TypeConverter.StringHexToByteArray(args.gas) : longToBytes(90_000),
+                args.to != null ? TypeConverter.StringHexToByteArray(args.to) : EMPTY_BYTE_ARRAY,
                 value,
-                args.data != null ? StringHexToByteArray(args.data) : EMPTY_BYTE_ARRAY);
+                args.data != null ? TypeConverter.StringHexToByteArray(args.data) : EMPTY_BYTE_ARRAY);
 
         tx.sign(account);
 
@@ -452,7 +451,7 @@ public class EthJsonRpcImpl implements JsonRpc {
     }
 
     public String eth_sendRawTransaction(String rawData) throws Exception {
-        Transaction tx = new Transaction(StringHexToByteArray(rawData));
+        Transaction tx = new Transaction(TypeConverter.StringHexToByteArray(rawData));
 
         tx.rlpParse();
         validateAndSubmit(tx);
@@ -537,24 +536,24 @@ public class EthJsonRpcImpl implements JsonRpc {
             return null;
         boolean isPending = ByteUtil.byteArrayToLong(block.getNonce()) == 0;
         BlockResult br = new BlockResult();
-        br.number = isPending ? null : toJsonHex(block.getNumber());
-        br.hash = isPending ? null : toJsonHex(block.getHash());
-        br.parentHash = toJsonHex(block.getParentHash());
-        br.nonce = isPending ? null : toJsonHex(block.getNonce());
-        br.sha3Uncles= toJsonHex(block.getUnclesHash());
-        br.logsBloom = isPending ? null : toJsonHex(block.getLogBloom());
-        br.transactionsRoot = toJsonHex(block.getTxTrieRoot());
-        br.stateRoot = toJsonHex(block.getStateRoot());
-        br.receiptRoot = toJsonHex(block.getReceiptsRoot());
-        br.miner = isPending ? null : toJsonHex(block.getCoinbase());
-        br.difficulty = toJsonHex(block.getDifficultyBI());
-        br.totalDifficulty = toJsonHex(blockStore.getTotalDifficultyForHash(block.getHash()));
+        br.number = isPending ? null : TypeConverter.toJsonHex(block.getNumber());
+        br.hash = isPending ? null : TypeConverter.toJsonHex(block.getHash());
+        br.parentHash = TypeConverter.toJsonHex(block.getParentHash());
+        br.nonce = isPending ? null : TypeConverter.toJsonHex(block.getNonce());
+        br.sha3Uncles= TypeConverter.toJsonHex(block.getUnclesHash());
+        br.logsBloom = isPending ? null : TypeConverter.toJsonHex(block.getLogBloom());
+        br.transactionsRoot = TypeConverter.toJsonHex(block.getTxTrieRoot());
+        br.stateRoot = TypeConverter.toJsonHex(block.getStateRoot());
+        br.receiptRoot = TypeConverter.toJsonHex(block.getReceiptsRoot());
+        br.miner = isPending ? null : TypeConverter.toJsonHex(block.getCoinbase());
+        br.difficulty = TypeConverter.toJsonHex(block.getDifficultyBI());
+        br.totalDifficulty = TypeConverter.toJsonHex(blockStore.getTotalDifficultyForHash(block.getHash()));
         if (block.getExtraData() != null)
-            br.extraData = toJsonHex(block.getExtraData());
-        br.size = toJsonHex(block.getEncoded().length);
-        br.gasLimit = toJsonHex(block.getGasLimit());
-        br.gasUsed = toJsonHex(block.getGasUsed());
-        br.timestamp = toJsonHex(block.getTimestamp());
+            br.extraData = TypeConverter.toJsonHex(block.getExtraData());
+        br.size = TypeConverter.toJsonHex(block.getEncoded().length);
+        br.gasLimit = TypeConverter.toJsonHex(block.getGasLimit());
+        br.gasUsed = TypeConverter.toJsonHex(block.getGasUsed());
+        br.timestamp = TypeConverter.toJsonHex(block.getTimestamp());
 
         List<Object> txes = new ArrayList<>();
         if (fullTx) {
@@ -563,14 +562,14 @@ public class EthJsonRpcImpl implements JsonRpc {
             }
         } else {
             for (Transaction tx : block.getTransactionsList()) {
-                txes.add(toJsonHex(tx.getHash()));
+                txes.add(TypeConverter.toJsonHex(tx.getHash()));
             }
         }
         br.transactions = txes.toArray();
 
         List<String> ul = new ArrayList<>();
         for (BlockHeader header : block.getUncleList()) {
-            ul.add(toJsonHex(header.getHash()));
+            ul.add(TypeConverter.toJsonHex(header.getHash()));
         }
         br.uncles = ul.toArray(new String[ul.size()]);
 
@@ -593,7 +592,7 @@ public class EthJsonRpcImpl implements JsonRpc {
     }
 
     public TransactionResultDTO eth_getTransactionByHash(String transactionHash) throws Exception {
-        final byte[] txHash = StringHexToByteArray(transactionHash);
+        final byte[] txHash = TypeConverter.StringHexToByteArray(transactionHash);
 
         final TransactionInfo txInfo = blockchain.getTransactionInfo(txHash);
         if (txInfo == null) {
@@ -681,7 +680,7 @@ public class EthJsonRpcImpl implements JsonRpc {
 
     @Override
     public BlockResult eth_getUncleByBlockHashAndIndex(String blockHash, String uncleIdx) throws Exception {
-        Block block = blockchain.getBlockByHash(StringHexToByteArray(blockHash));
+        Block block = blockchain.getBlockByHash(TypeConverter.StringHexToByteArray(blockHash));
         if (block == null) return null;
         int idx = JSonHexToInt(uncleIdx);
         if (idx >= block.getUncleList().size()) return null;
@@ -697,7 +696,7 @@ public class EthJsonRpcImpl implements JsonRpc {
     public BlockResult eth_getUncleByBlockNumberAndIndex(String blockId, String uncleIdx) throws Exception {
         Block block = getByJsonBlockId(blockId);
         return block == null ? null :
-                eth_getUncleByBlockHashAndIndex(toJsonHex(block.getHash()), uncleIdx);
+                eth_getUncleByBlockHashAndIndex(TypeConverter.toJsonHex(block.getHash()), uncleIdx);
     }
 
     @Override
@@ -720,7 +719,7 @@ public class EthJsonRpcImpl implements JsonRpc {
         org.ethereum.solidity.compiler.CompilationResult result = org.ethereum.solidity.compiler.CompilationResult.parse(res.output);
         CompilationResult ret = new CompilationResult();
         org.ethereum.solidity.compiler.CompilationResult.ContractMetadata contractMetadata = result.getContracts().iterator().next();
-        ret.code = toJsonHex(contractMetadata.bin);
+        ret.code = TypeConverter.toJsonHex(contractMetadata.bin);
         ret.info = new CompilationInfo();
         ret.info.source = contract;
         ret.info.language = "Solidity";
@@ -793,7 +792,7 @@ public class EthJsonRpcImpl implements JsonRpc {
 
             @Override
             public String getJsonEventObject() {
-                return toJsonHex(b.getHash());
+                return TypeConverter.toJsonHex(b.getHash());
             }
         }
 
@@ -810,7 +809,7 @@ public class EthJsonRpcImpl implements JsonRpc {
 
             @Override
             public String getJsonEventObject() {
-                return toJsonHex(tx.getHash());
+                return TypeConverter.toJsonHex(tx.getHash());
             }
         }
 
@@ -891,11 +890,11 @@ public class EthJsonRpcImpl implements JsonRpc {
         LogFilter logFilter = new LogFilter();
 
         if (fr.address instanceof String) {
-            logFilter.withContractAddress(StringHexToByteArray((String) fr.address));
+            logFilter.withContractAddress(TypeConverter.StringHexToByteArray((String) fr.address));
         } else if (fr.address instanceof String[]) {
             List<byte[]> addr = new ArrayList<>();
             for (String s : ((String[]) fr.address)) {
-                addr.add(StringHexToByteArray(s));
+                addr.add(TypeConverter.StringHexToByteArray(s));
             }
             logFilter.withContractAddress(addr.toArray(new byte[0][]));
         }
@@ -905,11 +904,11 @@ public class EthJsonRpcImpl implements JsonRpc {
                 if (topic == null) {
                     logFilter.withTopic((byte[][]) null);
                 } else if (topic instanceof String) {
-                    logFilter.withTopic(new DataWord(StringHexToByteArray((String) topic)).getData());
+                    logFilter.withTopic(new DataWord(TypeConverter.StringHexToByteArray((String) topic)).getData());
                 } else if (topic instanceof String[]) {
                     List<byte[]> t = new ArrayList<>();
                     for (String s : ((String[]) topic)) {
-                        t.add(new DataWord(StringHexToByteArray(s)).getData());
+                        t.add(new DataWord(TypeConverter.StringHexToByteArray(s)).getData());
                     }
                     logFilter.withTopic(t.toArray(new byte[0][]));
                 }
@@ -938,39 +937,39 @@ public class EthJsonRpcImpl implements JsonRpc {
             filter.onNewBlock = true;
         }
 
-        return toJsonHex(id);
+        return TypeConverter.toJsonHex(id);
     }
 
     @Override
     public String eth_newBlockFilter() {
         int id = filterCounter.getAndIncrement();
         installedFilters.put(id, new NewBlockFilter());
-        return toJsonHex(id);
+        return TypeConverter.toJsonHex(id);
     }
 
     @Override
     public String eth_newPendingTransactionFilter() {
         int id = filterCounter.getAndIncrement();
         installedFilters.put(id, new PendingTransactionFilter());
-        return toJsonHex(id);
+        return TypeConverter.toJsonHex(id);
     }
 
     @Override
     public boolean eth_uninstallFilter(String id) {
         if (id == null) return false;
-        return installedFilters.remove(StringHexToBigInteger(id).intValue()) != null;
+        return installedFilters.remove(TypeConverter.StringHexToBigInteger(id).intValue()) != null;
     }
 
     @Override
     public Object[] eth_getFilterChanges(String id) {
-        Filter filter = installedFilters.get(StringHexToBigInteger(id).intValue());
+        Filter filter = installedFilters.get(TypeConverter.StringHexToBigInteger(id).intValue());
         if (filter == null) return null;
         return filter.poll();
     }
 
     @Override
     public Object[] eth_getFilterLogs(String id) {
-        Filter filter = installedFilters.get(StringHexToBigInteger(id).intValue());
+        Filter filter = installedFilters.get(TypeConverter.StringHexToBigInteger(id).intValue());
         if (filter == null) return null;
         return filter.getAll();
     }

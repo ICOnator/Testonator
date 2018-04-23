@@ -10,19 +10,22 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply plugin: 'maven-publish'
 
-bootJar {
-    launchScript()
-}
+group 'io.iconator'
+version '1.0.0'
+
+//bootJar {
+//    launchScript()
+//    baseName += "-exec"
+//}
+jar.enabled = true
 
 repositories {
     mavenLocal()
     mavenCentral()
     maven { url 'https://dl.bintray.com/ethereum/maven/' }
 }
-
-jar.enabled = true
-bootJar.enabled = false
 
 dependencies {
     compile 'org.ethereum:ethereumj-core:1.7.2-RELEASE'
@@ -31,4 +34,18 @@ dependencies {
     compile 'org.web3j:core:3.3.1'
     compile 'org.springframework.boot:spring-boot-starter-web:2.0.1.RELEASE'
     compileOnly "org.projectlombok:lombok:1.16.20"
+}
+
+publishing {
+    repositories {
+        maven {
+            // change to point to your repo, e.g. http://my.org/repo
+            url "repo"
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
 }

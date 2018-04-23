@@ -1,8 +1,8 @@
-package io.iconator.commons.test.utils;
+package io.iconator.testrpcj;
 
 import com.googlecode.jsonrpc4j.spring.JsonServiceExporter;
-import io.iconator.commons.test.jsonrpc.EthJsonRpcImpl;
-import io.iconator.commons.test.jsonrpc.JsonRpc;
+import io.iconator.testrpcj.jsonrpc.EthJsonRpcImpl;
+import io.iconator.testrpcj.jsonrpc.JsonRpc;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
@@ -18,12 +18,15 @@ import static org.springframework.boot.SpringApplication.run;
 @SpringBootApplication
 public class TestBlockchain {
 
+    static { System.setProperty("spring.config.name", "testrpcj.application"); }
+
     @Autowired
     private StandaloneBlockchain standaloneBlockchain;
 
     @Autowired
     private JsonRpc jsonRpc;
 
+    //public and private keys
     public final static ECKey ACCOUNT_0 = ECKey.fromPrivate(Hex.decode("1b865950b17a065c79b11ecb39650c377b4963d6387b2fb97d71744b89a7295e"));
     public final static ECKey ACCOUNT_1 = ECKey.fromPrivate(Hex.decode("c77ee832f3e5d7624ce9dab0eeb2958ad550e534952b79bb705e63b3989d4d1d"));
     public final static ECKey ACCOUNT_2 = ECKey.fromPrivate(Hex.decode("ba7ffe9dee14b3626211b2d056eacc30e7a634f7e11eeb4dde6ee6d50d0c81ab"));
@@ -35,16 +38,13 @@ public class TestBlockchain {
     public final static ECKey ACCOUNT_8 = ECKey.fromPrivate(Hex.decode("649f638d220fd6319ca4af8f5e0e261d15a66172830077126fef21fdbdd95410"));
     public final static ECKey ACCOUNT_9 = ECKey.fromPrivate(Hex.decode("ea8f71fc4690e0733f3478c3d8e53790988b9e51deabd10185364bc59c58fdba"));
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+
         try {
             run(TestBlockchain.class, args);
         } catch (Throwable t) {
             t.printStackTrace();
         }
-        //generate 10 addresses
-        //for(int i=0;i<10;i++) {
-        //    System.out.println(i+ " / "+ByteUtil.toHexString(new ECKey().getPrivKeyBytes()));
-        //}
     }
 
     @Bean

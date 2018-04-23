@@ -16,7 +16,7 @@
  * along with Ethereum Harmony.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.iconator.commons.test.jsonrpc;
+package io.iconator.testrpcj.jsonrpc;
 
 import org.ethereum.core.Transaction;
 

@@ -16,7 +16,7 @@
  * along with Ethereum Harmony.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.iconator.commons.test.jsonrpc;
+package io.iconator.testrpcj.jsonrpc;
 
 import com.googlecode.jsonrpc4j.JsonRpcService;
 import lombok.*;
@@ -27,7 +27,7 @@ import org.ethereum.vm.LogInfo;
 
 import java.util.Arrays;
 
-import static io.iconator.commons.test.jsonrpc.TypeConverter.toJsonHex;
+import static io.iconator.testrpcj.jsonrpc.TypeConverter.toJsonHex;
 
 /**
  * Created by Anton Nashatyrev on 25.11.2015.
@@ -180,16 +180,16 @@ public interface JsonRpc {
         public String[] topics;
 
         public LogFilterElement(LogInfo logInfo, Block b, int txIndex, Transaction tx, int logIdx) {
-            logIndex = toJsonHex(logIdx);
-            blockNumber = b == null ? null : toJsonHex(b.getNumber());
-            blockHash = b == null ? null : toJsonHex(b.getHash());
-            transactionIndex = b == null ? null : toJsonHex(txIndex);
-            transactionHash = toJsonHex(tx.getHash());
-            address = tx.getReceiveAddress() == null ? null : toJsonHex(tx.getReceiveAddress());
-            data = toJsonHex(logInfo.getData());
+            logIndex = TypeConverter.toJsonHex(logIdx);
+            blockNumber = b == null ? null : TypeConverter.toJsonHex(b.getNumber());
+            blockHash = b == null ? null : TypeConverter.toJsonHex(b.getHash());
+            transactionIndex = b == null ? null : TypeConverter.toJsonHex(txIndex);
+            transactionHash = TypeConverter.toJsonHex(tx.getHash());
+            address = tx.getReceiveAddress() == null ? null : TypeConverter.toJsonHex(tx.getReceiveAddress());
+            data = TypeConverter.toJsonHex(logInfo.getData());
             topics = new String[logInfo.getTopics().size()];
             for (int i = 0; i < topics.length; i++) {
-                topics[i] = toJsonHex(logInfo.getTopics().get(i).getData());
+                topics[i] = TypeConverter.toJsonHex(logInfo.getTopics().get(i).getData());
             }
         }
 

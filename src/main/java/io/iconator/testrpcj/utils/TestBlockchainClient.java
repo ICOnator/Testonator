@@ -1,14 +1,13 @@
-package io.iconator.commons.test.utils;
+package io.iconator.testrpcj.utils;
 
-import io.iconator.commons.test.jsonrpc.TypeConverter;
+import io.iconator.testrpcj.TestBlockchain;
+import io.iconator.testrpcj.jsonrpc.TypeConverter;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.RemoteCall;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
@@ -18,7 +17,13 @@ import java.math.BigInteger;
 
 public class TestBlockchainClient {
     public static void main(String[] args) throws Exception {
-        Web3j web3j = Web3j.build(new HttpService("http://localhost:8081/rpc"));
+
+        //generate 10 addresses
+        //for(int i=0;i<10;i++) {
+        //    System.out.println(i+ " / "+ByteUtil.toHexString(new ECKey().getPrivKeyBytes()));
+        //}
+
+        Web3j web3j = Web3j.build(new HttpService("http://localhost:8545/rpc"));
 
         Credentials credentials = Credentials.create(ECKeyPair.create(TestBlockchain.ACCOUNT_0.getPrivKeyBytes()));
 

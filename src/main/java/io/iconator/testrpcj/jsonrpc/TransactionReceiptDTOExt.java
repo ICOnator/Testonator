@@ -16,12 +16,12 @@
  * along with Ethereum Harmony.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.iconator.commons.test.jsonrpc;
+package io.iconator.testrpcj.jsonrpc;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionInfo;
 
-import static io.iconator.commons.test.jsonrpc.TypeConverter.toJsonHex;
+import static io.iconator.testrpcj.jsonrpc.TypeConverter.toJsonHex;
 
 
 /**
