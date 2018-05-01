@@ -3,7 +3,9 @@ package io.iconator.testrpcj;
 import com.googlecode.jsonrpc4j.spring.JsonServiceExporter;
 import io.iconator.testrpcj.jsonrpc.EthJsonRpcImpl;
 import io.iconator.testrpcj.jsonrpc.JsonRpc;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.spongycastle.util.encoders.Hex;
@@ -23,9 +25,6 @@ public class TestBlockchain {
     @Autowired
     private StandaloneBlockchain standaloneBlockchain;
 
-    @Autowired
-    private JsonRpc jsonRpc;
-
     //public and private keys
     public final static ECKey ACCOUNT_0 = ECKey.fromPrivate(Hex.decode("1b865950b17a065c79b11ecb39650c377b4963d6387b2fb97d71744b89a7295e"));
     public final static ECKey ACCOUNT_1 = ECKey.fromPrivate(Hex.decode("c77ee832f3e5d7624ce9dab0eeb2958ad550e534952b79bb705e63b3989d4d1d"));
@@ -38,13 +37,24 @@ public class TestBlockchain {
     public final static ECKey ACCOUNT_8 = ECKey.fromPrivate(Hex.decode("649f638d220fd6319ca4af8f5e0e261d15a66172830077126fef21fdbdd95410"));
     public final static ECKey ACCOUNT_9 = ECKey.fromPrivate(Hex.decode("ea8f71fc4690e0733f3478c3d8e53790988b9e51deabd10185364bc59c58fdba"));
 
-    public static void main(String[] args) {
+    public TestBlockchain() {
+        start(new String[]{});
+    }
 
+    public static void main(String[] args) {
+        new TestBlockchain().start(args);
+    }
+
+    private void start(String[] args) {
         try {
             run(TestBlockchain.class, args);
         } catch (Throwable t) {
             t.printStackTrace();
         }
+    }
+
+    public static SolidityCompiler compiler() {
+        return new SolidityCompiler(SystemProperties.getDefault());
     }
 
     @Bean
@@ -63,15 +73,10 @@ public class TestBlockchain {
                 .withAutoblock(true);  //after each transaction, a new block will be created
     }
 
-    @Bean
-    public JsonRpc jsonRpc() {
-        return new EthJsonRpcImpl(standaloneBlockchain);
-    }
-
     @Bean(name = "/rpc")
     public JsonServiceExporter jsonServiceExporter() {
         JsonServiceExporter exporter = new JsonServiceExporter();
-        exporter.setService(jsonRpc);
+        exporter.setService(new EthJsonRpcImpl(standaloneBlockchain));
         exporter.setServiceInterface(JsonRpc.class);
         return exporter;
     }

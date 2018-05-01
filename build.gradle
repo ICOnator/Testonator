@@ -13,7 +13,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'maven-publish'
 
 group 'io.iconator'
-version '1.0.0'
+version '1.0.1'
 
 //bootJar {
 //    launchScript()
