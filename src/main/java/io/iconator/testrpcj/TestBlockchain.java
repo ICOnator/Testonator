@@ -37,20 +37,20 @@ public class TestBlockchain {
     public final static ECKey ACCOUNT_8 = ECKey.fromPrivate(Hex.decode("649f638d220fd6319ca4af8f5e0e261d15a66172830077126fef21fdbdd95410"));
     public final static ECKey ACCOUNT_9 = ECKey.fromPrivate(Hex.decode("ea8f71fc4690e0733f3478c3d8e53790988b9e51deabd10185364bc59c58fdba"));
 
-    public TestBlockchain() {
-        start(new String[]{});
-    }
-
     public static void main(String[] args) {
         new TestBlockchain().start(args);
     }
 
-    private void start(String[] args) {
+    public void start(String[] args) {
         try {
             run(TestBlockchain.class, args);
         } catch (Throwable t) {
             t.printStackTrace();
         }
+    }
+
+    public void start() {
+        start(new String[]{});
     }
 
     public static SolidityCompiler compiler() {
