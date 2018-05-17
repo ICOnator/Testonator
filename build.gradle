@@ -7,18 +7,17 @@ buildscript {
     }
 }
 
-apply plugin: 'java'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
-apply plugin: 'maven-publish'
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.0.1.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.5.RELEASE'
+    id 'com.bmuschko.nexus' version '2.3.1'
+}
 
 group 'io.iconator'
+archivesBaseName = 'testrpcj'
 version '1.0.1'
 
-//bootJar {
-//    launchScript()
-//    baseName += "-exec"
-//}
 jar.enabled = true
 
 repositories {
@@ -32,20 +31,50 @@ dependencies {
     compile 'com.github.briandilley.jsonrpc4j:jsonrpc4j:1.5.3'
     compile 'org.apache.commons:commons-io:1.3.2'
     compile 'org.web3j:core:3.3.1'
-    compile 'org.springframework.boot:spring-boot-starter-web:2.0.1.RELEASE'
-    compileOnly "org.projectlombok:lombok:1.16.20"
+    compile 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok:1.16.20'
 }
 
-publishing {
-    repositories {
-        maven {
-            // change to point to your repo, e.g. http://my.org/repo
-            url "repo"
+modifyPom {
+    project {
+        name 'testrpcj'
+        description 'Java util to support jsonrpc tests.'
+        url 'https://github.com/ICOnator/testrpcj'
+        inceptionYear '2018'
+        scm {
+            url 'https://github.com/ICOnator/testrpcj'
+            connection 'scm:https://github.com/ICOnator/testrpcj.git'
+            developerConnection 'scm:https://github.com/ICOnator/testrpcj.git'
+        }
+        licenses {
+            license {
+                name 'GNU GENERAL PUBLIC LICENSE, Version 3'
+                url 'https://www.gnu.org/licenses/gpl-3.0.en.html'
+                distribution 'repo'
+            }
+        }
+        developers {
+            developer {
+                id 'tbocek'
+                name 'tbocek'
+                email 'tom@bocek.ch'
+            }
+            developer {
+                id 'gsmachado'
+                name 'gsmachado'
+                email 'guil@axlabs.com'
+            }
         }
     }
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
+}
+extraArchive {
+    sources = true
+    tests = true
+    javadoc = true
+}
+
+nexus {
+    sign = true
+    repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+    snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
 }
