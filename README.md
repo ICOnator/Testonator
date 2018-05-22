@@ -22,7 +22,18 @@ compile 'io.iconator:testrpcj:1.0.1'
 
 ## How to deploy to Maven Central
 
-First, clean and build the project. Make sure that you increase the project version as well. :-)
+First, make sure that you have a `gradle.properties` with the following variables set:
+
+```
+nexusUsername=<USERNAME>
+nexusPassword=<PASSWORD>
+
+signing.keyId=<KEY_ID>
+signing.password=<KEY_PASSWORD>
+signing.secretKeyRingFile=<KEY_RING_FILE>
+```
+
+Second, clean and build the project. Make sure that you increase the project version as well. :-)
 
 ```
 $ sh gradlew clean build
@@ -34,7 +45,7 @@ Then, upload the whole archive:
 $ sh gradlew uploadArchives
 ```
 
-If everything is uploaded, close the staged project and release the repository:
+If everything is successfully uploaded, close the staged project and release the repository:
 
 ```
 $ sh gradlew closeAndReleaseRepository
