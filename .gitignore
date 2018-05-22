@@ -57,3 +57,5 @@ build/
 database/
 logs/
 testrpcj.iml
+gradle.properties
+**/gradle.properties
