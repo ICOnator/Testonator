@@ -1,7 +1,7 @@
 package io.iconator.testrpcj;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.googlecode.jsonrpc4j.spring.JsonServiceExporter;
+import com.googlecode.jsonrpc4j.JsonRpcServer;
 import io.iconator.testrpcj.jsonrpc.EthJsonRpcImpl;
 import io.iconator.testrpcj.jsonrpc.JsonRpc;
 import org.ethereum.config.SystemProperties;
@@ -10,7 +10,6 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
@@ -27,11 +26,6 @@ import static org.springframework.boot.SpringApplication.run;
 public class TestBlockchain {
 
     static { System.setProperty("spring.config.name", "testrpcj.application"); }
-
-    @Autowired
-    private StandaloneBlockchain standaloneBlockchain;
-
-    public static StandaloneBlockchain tmp = null;
 
     //public and private keys
     public final static ECKey ACCOUNT_0 = ECKey.fromPrivate(Hex.decode("1b865950b17a065c79b11ecb39650c377b4963d6387b2fb97d71744b89a7295e"));
@@ -68,7 +62,7 @@ public class TestBlockchain {
 
     @Bean
     public StandaloneBlockchain createStandaloneBlockchain() {
-        tmp = new StandaloneBlockchain()
+        StandaloneBlockchain standaloneBlockchain = new StandaloneBlockchain()
                 .withAccountBalance(ACCOUNT_0.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
                 .withAccountBalance(ACCOUNT_1.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
                 .withAccountBalance(ACCOUNT_2.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
@@ -80,32 +74,24 @@ public class TestBlockchain {
                 .withAccountBalance(ACCOUNT_8.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
                 .withAccountBalance(ACCOUNT_9.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
                 .withAutoblock(true);  //after each transaction, a new block will be created
-        return tmp;
-    }
-
-    @Bean(name = "/rpc")
-    public JsonServiceExporter jsonServiceExporter() {
         standaloneBlockchain.createBlock();
-        JsonServiceExporter exporter = new JsonServiceExporter();
-        exporter.setService(new EthJsonRpcImpl(standaloneBlockchain));
-        exporter.setServiceInterface(JsonRpc.class);
-        return exporter;
+        return standaloneBlockchain;
     }
 
     @Bean
-    public ServletRegistrationBean servletRegistrationBean(){
-        RPCServlet rpcServlet = new RPCServlet(jsonServiceExporter());
-        return new ServletRegistrationBean(rpcServlet,"/*");
+    public EthJsonRpcImpl ethJsonRpcImpl(StandaloneBlockchain standaloneBlockchain) {
+        return new EthJsonRpcImpl(standaloneBlockchain);
+    }
+
+    @Bean
+    public ServletRegistrationBean servletRegistrationBean(EthJsonRpcImpl ethJsonRpcImpl){
+        JsonRpcServer server = new JsonRpcServer(new ObjectMapper(), ethJsonRpcImpl, JsonRpc.class);
+        RPCServlet rpcServlet = new RPCServlet(server);
+        return new ServletRegistrationBean(rpcServlet,"/rpc/*");
     }
 
     @Bean
     public ServletWebServerFactory servletWebServerFactory(){
         return new TomcatServletWebServerFactory(8545);
-    }
-
-    @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper;
     }
 }

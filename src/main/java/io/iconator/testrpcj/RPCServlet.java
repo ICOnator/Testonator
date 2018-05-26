@@ -23,11 +23,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.googlecode.jsonrpc4j.JsonRpcServer;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 
 
@@ -35,21 +35,21 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 public class RPCServlet extends HttpServlet {
 
     @Nullable
-    private HttpRequestHandler target;
+    private JsonRpcServer jsonRpcServer;
 
-    public RPCServlet(HttpRequestHandler target) {
-        this.target = target;
+    public RPCServlet(JsonRpcServer jsonRpcServer) {
+        this.jsonRpcServer = jsonRpcServer;
     }
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        Assert.state(this.target != null, "No HttpRequestHandler available");
+        Assert.state(this.jsonRpcServer != null, "No HttpRequestHandler available");
 
         LocaleContextHolder.setLocale(request.getLocale());
         try {
-            this.target.handleRequest(request, response);
+            handleRequest(request, response);
         }
         catch (HttpRequestMethodNotSupportedException ex) {
             String[] supportedMethods = ex.getSupportedMethods();
@@ -61,6 +61,11 @@ public class RPCServlet extends HttpServlet {
         finally {
             LocaleContextHolder.resetLocaleContext();
         }
+    }
+
+    public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws  ServletException, IOException {
+        jsonRpcServer.handle(request, response);
+        response.getOutputStream().flush();
     }
 
 }
