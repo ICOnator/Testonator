@@ -16,13 +16,6 @@ package io.iconator.testrpcj;
  * limitations under the License.
  */
 
-
-import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import com.googlecode.jsonrpc4j.JsonRpcServer;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.lang.Nullable;
@@ -30,6 +23,11 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @SuppressWarnings("serial")
 public class RPCServlet extends HttpServlet {
@@ -50,20 +48,18 @@ public class RPCServlet extends HttpServlet {
         LocaleContextHolder.setLocale(request.getLocale());
         try {
             handleRequest(request, response);
-        }
-        catch (HttpRequestMethodNotSupportedException ex) {
+        } catch (HttpRequestMethodNotSupportedException ex) {
             String[] supportedMethods = ex.getSupportedMethods();
             if (supportedMethods != null) {
                 response.setHeader("Allow", StringUtils.arrayToDelimitedString(supportedMethods, ", "));
             }
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, ex.getMessage());
-        }
-        finally {
+        } finally {
             LocaleContextHolder.resetLocaleContext();
         }
     }
 
-    public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws  ServletException, IOException {
+    public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         jsonRpcServer.handle(request, response);
         response.getOutputStream().flush();
     }

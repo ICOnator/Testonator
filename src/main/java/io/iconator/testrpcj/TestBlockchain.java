@@ -10,6 +10,7 @@ import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
@@ -19,13 +20,13 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.springframework.boot.SpringApplication.run;
 
-//testrpc for Java applications - to test:
-//curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest", true],"id":1}' http://localhost:8081/rpc
 @Configuration
 @ComponentScan("io.iconator.testrpcj")
 public class TestBlockchain {
 
-    static { System.setProperty("spring.config.name", "testrpcj.application"); }
+    static {
+        System.setProperty("spring.config.name", "testrpcj.application");
+    }
 
     //public and private keys
     public final static ECKey ACCOUNT_0 = ECKey.fromPrivate(Hex.decode("1b865950b17a065c79b11ecb39650c377b4963d6387b2fb97d71744b89a7295e"));
@@ -84,14 +85,14 @@ public class TestBlockchain {
     }
 
     @Bean
-    public ServletRegistrationBean servletRegistrationBean(EthJsonRpcImpl ethJsonRpcImpl){
+    public ServletRegistrationBean servletRegistrationBean(EthJsonRpcImpl ethJsonRpcImpl) {
         JsonRpcServer server = new JsonRpcServer(new ObjectMapper(), ethJsonRpcImpl, JsonRpc.class);
         RPCServlet rpcServlet = new RPCServlet(server);
-        return new ServletRegistrationBean(rpcServlet,"/rpc/*");
+        return new ServletRegistrationBean(rpcServlet, "/rpc/*");
     }
 
     @Bean
-    public ServletWebServerFactory servletWebServerFactory(){
-        return new TomcatServletWebServerFactory(8545);
+    public ServletWebServerFactory servletWebServerFactory(@Value("${server.port}") Integer port) {
+        return new TomcatServletWebServerFactory(port);
     }
 }

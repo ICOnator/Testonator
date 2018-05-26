@@ -10,15 +10,25 @@ Maven:
 <dependency>
     <groupId>io.iconator</groupId>
     <artifactId>testrpcj</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.10</version>
 </dependency>
 ```
 
 Gradle:
 
 ```
-compile 'io.iconator:testrpcj:1.0.1'
+compile 'io.iconator:testrpcj:1.0.10'
 ```
+
+## Example of JSON-RPC request
+
+You can instantiate the `TestBlockchain` class, and then run the following:
+
+```
+$ curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest", true],"id":1}' http://localhost:8585/rpc
+```
+
+The default port is `8545`.
 
 ## How to deploy to Maven Central
 
