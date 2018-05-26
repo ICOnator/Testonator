@@ -1,5 +1,6 @@
 package io.iconator.testrpcj;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.jsonrpc4j.spring.JsonServiceExporter;
 import io.iconator.testrpcj.jsonrpc.EthJsonRpcImpl;
 import io.iconator.testrpcj.jsonrpc.JsonRpc;
@@ -10,14 +11,19 @@ import org.ethereum.util.blockchain.EtherUtil;
 import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 
 import static org.springframework.boot.SpringApplication.run;
 
 //testrpc for Java applications - to test:
 //curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest", true],"id":1}' http://localhost:8081/rpc
-@SpringBootApplication
+@Configuration
+@ComponentScan("io.iconator.testrpcj")
 public class TestBlockchain {
 
     static { System.setProperty("spring.config.name", "testrpcj.application"); }
@@ -49,8 +55,9 @@ public class TestBlockchain {
         }
     }
 
-    public void start() {
+    public TestBlockchain start() {
         start(new String[]{});
+        return this;
     }
 
     public static SolidityCompiler compiler() {
@@ -79,5 +86,22 @@ public class TestBlockchain {
         exporter.setService(new EthJsonRpcImpl(standaloneBlockchain));
         exporter.setServiceInterface(JsonRpc.class);
         return exporter;
+    }
+
+    @Bean
+    public ServletRegistrationBean servletRegistrationBean(){
+        RPCServlet rpcServlet = new RPCServlet(jsonServiceExporter());
+        return new ServletRegistrationBean(rpcServlet,"/*");
+    }
+
+    @Bean
+    ServletWebServerFactory servletWebServerFactory(){
+        return new TomcatServletWebServerFactory(8545);
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper;
     }
 }
