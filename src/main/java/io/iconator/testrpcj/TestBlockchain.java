@@ -31,6 +31,8 @@ public class TestBlockchain {
     @Autowired
     private StandaloneBlockchain standaloneBlockchain;
 
+    public static StandaloneBlockchain tmp = null;
+
     //public and private keys
     public final static ECKey ACCOUNT_0 = ECKey.fromPrivate(Hex.decode("1b865950b17a065c79b11ecb39650c377b4963d6387b2fb97d71744b89a7295e"));
     public final static ECKey ACCOUNT_1 = ECKey.fromPrivate(Hex.decode("c77ee832f3e5d7624ce9dab0eeb2958ad550e534952b79bb705e63b3989d4d1d"));
@@ -66,7 +68,7 @@ public class TestBlockchain {
 
     @Bean
     public StandaloneBlockchain createStandaloneBlockchain() {
-        return new StandaloneBlockchain()
+        tmp = new StandaloneBlockchain()
                 .withAccountBalance(ACCOUNT_0.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
                 .withAccountBalance(ACCOUNT_1.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
                 .withAccountBalance(ACCOUNT_2.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
@@ -78,10 +80,12 @@ public class TestBlockchain {
                 .withAccountBalance(ACCOUNT_8.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
                 .withAccountBalance(ACCOUNT_9.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
                 .withAutoblock(true);  //after each transaction, a new block will be created
+        return tmp;
     }
 
     @Bean(name = "/rpc")
     public JsonServiceExporter jsonServiceExporter() {
+        standaloneBlockchain.createBlock();
         JsonServiceExporter exporter = new JsonServiceExporter();
         exporter.setService(new EthJsonRpcImpl(standaloneBlockchain));
         exporter.setServiceInterface(JsonRpc.class);
@@ -95,7 +99,7 @@ public class TestBlockchain {
     }
 
     @Bean
-    ServletWebServerFactory servletWebServerFactory(){
+    public ServletWebServerFactory servletWebServerFactory(){
         return new TomcatServletWebServerFactory(8545);
     }
 

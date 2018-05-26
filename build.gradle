@@ -20,13 +20,20 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+            artifact sourceJar {
+                classifier "sources"
+            }
         }
     }
 }
 
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
 group 'io.iconator'
 archivesBaseName = 'testrpcj'
-version '1.0.7'
+version '1.0.9'
 
 jar.enabled = true
 
