@@ -1,6 +1,8 @@
+![Travis](https://img.shields.io/travis/ICOnator/testrpcj.svg) ![Maven metadata URI](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/io/iconator/testrpcj/maven-metadata.xml.svg)
+
 # testrpcj
 
-This library provides an Ethereum test blockchain for testing purposes.
+This library provides a JSON-RPC wrapper to a standalone Ethereum blockchain, used for testing purposes.
 
 ## Add the dependency
 
