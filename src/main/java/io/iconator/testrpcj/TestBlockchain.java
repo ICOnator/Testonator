@@ -18,8 +18,9 @@ import org.spongycastle.util.encoders.Hex;
 import javax.servlet.DispatcherType;
 import java.util.EnumSet;
 
-
 public class TestBlockchain {
+
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(TestBlockchain.class);
 
     // public and private keys
     public final static ECKey ACCOUNT_0 = ECKey.fromPrivate(Hex.decode("1b865950b17a065c79b11ecb39650c377b4963d6387b2fb97d71744b89a7295e"));
@@ -32,21 +33,24 @@ public class TestBlockchain {
     public final static ECKey ACCOUNT_7 = ECKey.fromPrivate(Hex.decode("d58fd771caefbdcca0c23fbc440fd03dacdee29cc4668cc9fc5acf29b4219f41"));
     public final static ECKey ACCOUNT_8 = ECKey.fromPrivate(Hex.decode("649f638d220fd6319ca4af8f5e0e261d15a66172830077126fef21fdbdd95410"));
     public final static ECKey ACCOUNT_9 = ECKey.fromPrivate(Hex.decode("ea8f71fc4690e0733f3478c3d8e53790988b9e51deabd10185364bc59c58fdba"));
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TestBlockchain.class);
+
+    private final static Integer DEFAULT_PORT = 8585;
+
     private Server server = null;
     private StandaloneBlockchain standaloneBlockchain = null;
 
     public static void main(String[] args) throws Exception {
+        Integer port = null;
         TestBlockchain t = new TestBlockchain();
-        int port = 8545;
         if (args.length > 0) {
             try {
                 port = Integer.parseInt(args[0]);
             } catch (NumberFormatException nfe) {
-                log.info("using default port, not a number: {}", args[0]);
+                LOG.info("The given parameter is not a number: {}", args[0]);
+                port = DEFAULT_PORT;
             }
         }
-        log.info("using port: {}", port);
+        LOG.info("Using port: {}", port);
         t.start(port);
     }
 
@@ -55,7 +59,7 @@ public class TestBlockchain {
     }
 
     public TestBlockchain start() throws Exception {
-        return start(8545);
+        return start(DEFAULT_PORT);
     }
 
     public TestBlockchain start(int port) throws Exception {
