@@ -41,28 +41,19 @@ public class RPCServlet extends HttpServlet {
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
 
-        Assert.state(this.jsonRpcServer != null, "No HttpRequestHandler available");
+        Assert.state(this.jsonRpcServer != null, "No JsonRpcServer available");
 
         LocaleContextHolder.setLocale(request.getLocale());
         try {
-            handleRequest(request, response);
-        } catch (HttpRequestMethodNotSupportedException ex) {
-            String[] supportedMethods = ex.getSupportedMethods();
-            if (supportedMethods != null) {
-                response.setHeader("Allow", StringUtils.arrayToDelimitedString(supportedMethods, ", "));
-            }
-            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, ex.getMessage());
+            jsonRpcServer.handle(request, response);
+            response.getOutputStream().flush();
+        } catch (IOException ex) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
         } finally {
             LocaleContextHolder.resetLocaleContext();
         }
     }
-
-    public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        jsonRpcServer.handle(request, response);
-        response.getOutputStream().flush();
-    }
-
 }
 

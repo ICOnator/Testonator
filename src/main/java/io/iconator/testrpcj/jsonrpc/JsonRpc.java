@@ -19,7 +19,6 @@
 package io.iconator.testrpcj.jsonrpc;
 
 import com.googlecode.jsonrpc4j.JsonRpcService;
-import lombok.*;
 import org.ethereum.core.Block;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
@@ -27,25 +26,32 @@ import org.ethereum.vm.LogInfo;
 
 import java.util.Arrays;
 
-import static io.iconator.testrpcj.jsonrpc.TypeConverter.toJsonHex;
-
 /**
  * Created by Anton Nashatyrev on 25.11.2015.
  */
 @JsonRpcService("/rpc")
 public interface JsonRpc {
 
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @ToString
     class SyncingResult {
         public String startingBlock;
         public String currentBlock;
         public String highestBlock;
+
+        @java.beans.ConstructorProperties({"startingBlock", "currentBlock", "highestBlock"})
+        public SyncingResult(String startingBlock, String currentBlock, String highestBlock) {
+            this.startingBlock = startingBlock;
+            this.currentBlock = currentBlock;
+            this.highestBlock = highestBlock;
+        }
+
+        public SyncingResult() {
+        }
+
+        public String toString() {
+            return "JsonRpc.SyncingResult(startingBlock=" + this.startingBlock + ", currentBlock=" + this.currentBlock + ", highestBlock=" + this.highestBlock + ")";
+        }
     }
 
-    @NoArgsConstructor
-    @AllArgsConstructor
     class CallArguments {
         public String from;
         public String to;
@@ -54,6 +60,20 @@ public interface JsonRpc {
         public String value;
         public String data; // compiledCode
         public String nonce;
+
+        @java.beans.ConstructorProperties({"from", "to", "gas", "gasPrice", "value", "data", "nonce"})
+        public CallArguments(String from, String to, String gas, String gasPrice, String value, String data, String nonce) {
+            this.from = from;
+            this.to = to;
+            this.gas = gas;
+            this.gasPrice = gasPrice;
+            this.value = value;
+            this.data = data;
+            this.nonce = nonce;
+        }
+
+        public CallArguments() {
+        }
 
         @Override
         public String toString() {

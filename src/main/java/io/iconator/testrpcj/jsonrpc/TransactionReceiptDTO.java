@@ -18,20 +18,14 @@
 
 package io.iconator.testrpcj.jsonrpc;
 
-import lombok.Value;
-import lombok.experimental.NonFinal;
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionInfo;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.vm.LogInfo;
 
-import static io.iconator.testrpcj.jsonrpc.TypeConverter.toJsonHex;
-
 /**
  * Created by Ruben on 5/1/2016.
  */
-@Value
-@NonFinal
 public class TransactionReceiptDTO {
 
     public String transactionHash;          // hash of the transaction.
@@ -70,5 +64,101 @@ public class TransactionReceiptDTO {
             logs[i] = new JsonRpc.LogFilterElement(logInfo, block, txInfo.getIndex(),
                     txInfo.getReceipt().getTransaction(), i);
         }
+    }
+
+    public String getTransactionHash() {
+        return this.transactionHash;
+    }
+
+    public String getTransactionIndex() {
+        return this.transactionIndex;
+    }
+
+    public String getBlockHash() {
+        return this.blockHash;
+    }
+
+    public String getBlockNumber() {
+        return this.blockNumber;
+    }
+
+    public String getCumulativeGasUsed() {
+        return this.cumulativeGasUsed;
+    }
+
+    public String getGasUsed() {
+        return this.gasUsed;
+    }
+
+    public String getContractAddress() {
+        return this.contractAddress;
+    }
+
+    public JsonRpc.LogFilterElement[] getLogs() {
+        return this.logs;
+    }
+
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof TransactionReceiptDTO)) return false;
+        final TransactionReceiptDTO other = (TransactionReceiptDTO) o;
+        if (!other.canEqual((Object) this)) return false;
+        final Object this$transactionHash = this.getTransactionHash();
+        final Object other$transactionHash = other.getTransactionHash();
+        if (this$transactionHash == null ? other$transactionHash != null : !this$transactionHash.equals(other$transactionHash))
+            return false;
+        final Object this$transactionIndex = this.getTransactionIndex();
+        final Object other$transactionIndex = other.getTransactionIndex();
+        if (this$transactionIndex == null ? other$transactionIndex != null : !this$transactionIndex.equals(other$transactionIndex))
+            return false;
+        final Object this$blockHash = this.getBlockHash();
+        final Object other$blockHash = other.getBlockHash();
+        if (this$blockHash == null ? other$blockHash != null : !this$blockHash.equals(other$blockHash)) return false;
+        final Object this$blockNumber = this.getBlockNumber();
+        final Object other$blockNumber = other.getBlockNumber();
+        if (this$blockNumber == null ? other$blockNumber != null : !this$blockNumber.equals(other$blockNumber))
+            return false;
+        final Object this$cumulativeGasUsed = this.getCumulativeGasUsed();
+        final Object other$cumulativeGasUsed = other.getCumulativeGasUsed();
+        if (this$cumulativeGasUsed == null ? other$cumulativeGasUsed != null : !this$cumulativeGasUsed.equals(other$cumulativeGasUsed))
+            return false;
+        final Object this$gasUsed = this.getGasUsed();
+        final Object other$gasUsed = other.getGasUsed();
+        if (this$gasUsed == null ? other$gasUsed != null : !this$gasUsed.equals(other$gasUsed)) return false;
+        final Object this$contractAddress = this.getContractAddress();
+        final Object other$contractAddress = other.getContractAddress();
+        if (this$contractAddress == null ? other$contractAddress != null : !this$contractAddress.equals(other$contractAddress))
+            return false;
+        if (!java.util.Arrays.deepEquals(this.getLogs(), other.getLogs())) return false;
+        return true;
+    }
+
+    public int hashCode() {
+        final int PRIME = 59;
+        int result = 1;
+        final Object $transactionHash = this.getTransactionHash();
+        result = result * PRIME + ($transactionHash == null ? 43 : $transactionHash.hashCode());
+        final Object $transactionIndex = this.getTransactionIndex();
+        result = result * PRIME + ($transactionIndex == null ? 43 : $transactionIndex.hashCode());
+        final Object $blockHash = this.getBlockHash();
+        result = result * PRIME + ($blockHash == null ? 43 : $blockHash.hashCode());
+        final Object $blockNumber = this.getBlockNumber();
+        result = result * PRIME + ($blockNumber == null ? 43 : $blockNumber.hashCode());
+        final Object $cumulativeGasUsed = this.getCumulativeGasUsed();
+        result = result * PRIME + ($cumulativeGasUsed == null ? 43 : $cumulativeGasUsed.hashCode());
+        final Object $gasUsed = this.getGasUsed();
+        result = result * PRIME + ($gasUsed == null ? 43 : $gasUsed.hashCode());
+        final Object $contractAddress = this.getContractAddress();
+        result = result * PRIME + ($contractAddress == null ? 43 : $contractAddress.hashCode());
+        result = result * PRIME + java.util.Arrays.deepHashCode(this.getLogs());
+        return result;
+    }
+
+    protected boolean canEqual(Object other) {
+        return other instanceof TransactionReceiptDTO;
+    }
+
+    public String toString() {
+        return "TransactionReceiptDTO(transactionHash=" + this.getTransactionHash() + ", transactionIndex=" + this.getTransactionIndex() + ", blockHash=" + this.getBlockHash() + ", blockNumber=" + this.getBlockNumber() + ", cumulativeGasUsed=" + this.getCumulativeGasUsed() + ", gasUsed=" + this.getGasUsed() + ", contractAddress=" + this.getContractAddress() + ", logs=" + java.util.Arrays.deepToString(this.getLogs()) + ")";
     }
 }
