@@ -18,12 +18,8 @@ package io.iconator.testrpcj;
 
 import com.googlecode.jsonrpc4j.JsonRpcServer;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -32,7 +28,6 @@ import java.io.IOException;
 @SuppressWarnings("serial")
 public class RPCServlet extends HttpServlet {
 
-    @Nullable
     private JsonRpcServer jsonRpcServer;
 
     public RPCServlet(JsonRpcServer jsonRpcServer) {

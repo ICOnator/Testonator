@@ -44,10 +44,6 @@ public class TypeConverter {
         return ByteUtil.byteArrayToLong(Hex.decode(fromHex(x)));
     }
 
-    public static long HexToInt(String x) {
-        return ByteUtil.byteArrayToInt(Hex.decode(fromHex(x)));
-    }
-
     private static String fromHex(String x) {
         if (x.startsWith("0x")) {
             x = x.substring(2);

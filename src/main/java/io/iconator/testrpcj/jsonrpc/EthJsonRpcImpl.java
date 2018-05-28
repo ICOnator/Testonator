@@ -41,7 +41,6 @@ import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.util.*;
@@ -157,10 +156,11 @@ public class EthJsonRpcImpl implements JsonRpc {
         this.blockchain = standaloneBlockchain.getBlockchain();
         this.pendingState = standaloneBlockchain.getPendingState();
         this.blockStore = standaloneBlockchain.getBlockchain().getBlockStore();
+        init();
     }
 
 
-    @PostConstruct
+
     private void init() {
         initialBlockNumber = blockchain.getBestBlock().getNumber();
 

@@ -1,21 +1,25 @@
 package io.iconator.testrpcj;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.googlecode.jsonrpc4j.JsonRpcServer;
+import io.iconator.testrpcj.jsonrpc.AddContentTypeFilter;
+import io.iconator.testrpcj.jsonrpc.EthJsonRpcImpl;
+import io.iconator.testrpcj.jsonrpc.JsonRpc;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.solidity.compiler.SolidityCompiler;
+import org.ethereum.util.blockchain.EtherUtil;
+import org.ethereum.util.blockchain.StandaloneBlockchain;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 
-import static org.springframework.boot.SpringApplication.run;
+import javax.servlet.DispatcherType;
+import java.util.EnumSet;
 
-@Configuration
-@ComponentScan(basePackages = "io.iconator.testrpcj")
+
 public class TestBlockchain {
-
-    static {
-        System.setProperty("spring.config.name", "testrpcj.application");
-    }
 
     // public and private keys
     public final static ECKey ACCOUNT_0 = ECKey.fromPrivate(Hex.decode("1b865950b17a065c79b11ecb39650c377b4963d6387b2fb97d71744b89a7295e"));
@@ -28,26 +32,73 @@ public class TestBlockchain {
     public final static ECKey ACCOUNT_7 = ECKey.fromPrivate(Hex.decode("d58fd771caefbdcca0c23fbc440fd03dacdee29cc4668cc9fc5acf29b4219f41"));
     public final static ECKey ACCOUNT_8 = ECKey.fromPrivate(Hex.decode("649f638d220fd6319ca4af8f5e0e261d15a66172830077126fef21fdbdd95410"));
     public final static ECKey ACCOUNT_9 = ECKey.fromPrivate(Hex.decode("ea8f71fc4690e0733f3478c3d8e53790988b9e51deabd10185364bc59c58fdba"));
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TestBlockchain.class);
+    private Server server = null;
+    private StandaloneBlockchain standaloneBlockchain = null;
 
-    public static void main(String[] args) {
-        new TestBlockchain().start(args);
-    }
-
-    public void start(String[] args) {
-        try {
-            run(TestBlockchain.class, args);
-        } catch (Throwable t) {
-            t.printStackTrace();
+    public static void main(String[] args) throws Exception {
+        TestBlockchain t = new TestBlockchain();
+        int port = 8545;
+        if (args.length > 0) {
+            try {
+                port = Integer.parseInt(args[0]);
+            } catch (NumberFormatException nfe) {
+                log.info("using default port, not a number: {}", args[0]);
+            }
         }
-    }
-
-    public TestBlockchain start() {
-        start(new String[]{});
-        return this;
+        log.info("using port: {}", port);
+        t.start(port);
     }
 
     public static SolidityCompiler compiler() {
         return new SolidityCompiler(SystemProperties.getDefault());
+    }
+
+    public TestBlockchain start() throws Exception {
+        return start(8545);
+    }
+
+    public TestBlockchain start(int port) throws Exception {
+        if (server != null) {
+            stop();
+        }
+        server = new Server(port);
+
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+        server.setHandler(context);
+
+        standaloneBlockchain = new StandaloneBlockchain()
+                .withAccountBalance(TestBlockchain.ACCOUNT_0.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_1.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_2.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_3.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_4.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_5.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_6.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_7.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_8.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_9.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAutoblock(true);  //after each transaction, a new block will be created
+        standaloneBlockchain.createBlock();
+        EthJsonRpcImpl ethJsonRpcImpl = new EthJsonRpcImpl(standaloneBlockchain);
+
+        JsonRpcServer rpcServer = new JsonRpcServer(new ObjectMapper(), ethJsonRpcImpl, JsonRpc.class);
+        RPCServlet rpcServlet = new RPCServlet(rpcServer);
+        ServletHolder holder = new ServletHolder(rpcServlet);
+        context.addServlet(holder, "/rpc");
+        context.addFilter(AddContentTypeFilter.class, "/rpc", EnumSet.of(DispatcherType.REQUEST));
+        server.start();
+
+        return this;
+    }
+
+    private TestBlockchain stop() throws Exception {
+        server.stop();
+        server.destroy();
+        server = null;
+        standaloneBlockchain = null;
+        return this;
     }
 
 }
