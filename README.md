@@ -27,7 +27,7 @@ compile 'io.iconator:testrpcj:1.0.13'
 You can instantiate the `TestBlockchain` class, and then run the following:
 
 ```
-$ curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest", true],"id":1}' http://localhost:8585/rpc
+$ curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest", true],"id":1}' http://localhost:8545/rpc
 ```
 
 The default port is `8545`.
