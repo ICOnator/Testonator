@@ -34,7 +34,7 @@ public class TestBlockchain {
     public final static ECKey ACCOUNT_8 = ECKey.fromPrivate(Hex.decode("649f638d220fd6319ca4af8f5e0e261d15a66172830077126fef21fdbdd95410"));
     public final static ECKey ACCOUNT_9 = ECKey.fromPrivate(Hex.decode("ea8f71fc4690e0733f3478c3d8e53790988b9e51deabd10185364bc59c58fdba"));
 
-    private final static Integer DEFAULT_PORT = 8585;
+    private final static Integer DEFAULT_PORT = 8545;
 
     private Server server = null;
     private StandaloneBlockchain standaloneBlockchain = null;
@@ -46,7 +46,7 @@ public class TestBlockchain {
             try {
                 port = Integer.parseInt(args[0]);
             } catch (NumberFormatException nfe) {
-                LOG.info("The given parameter is not a number: {}", args[0]);
+                LOG.info("The given parameter can't be parsed as a number: {}", args[0]);
                 port = DEFAULT_PORT;
             }
         }

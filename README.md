@@ -12,14 +12,14 @@ Maven:
 <dependency>
     <groupId>io.iconator</groupId>
     <artifactId>testrpcj</artifactId>
-    <version>1.0.12</version>
+    <version>1.0.13</version>
 </dependency>
 ```
 
 Gradle:
 
 ```
-compile 'io.iconator:testrpcj:1.0.12'
+compile 'io.iconator:testrpcj:1.0.13'
 ```
 
 ## Example of JSON-RPC request
