@@ -22,7 +22,7 @@ task sourceJar(type: Jar) {
 
 group 'io.iconator'
 archivesBaseName = 'testrpcj'
-version '1.0.12'
+version '1.0.13'
 
 jar.enabled = true
 
@@ -46,7 +46,7 @@ dependencies {
 modifyPom {
     project {
         name 'testrpcj'
-        description 'Java util to support jsonrpc tests.'
+        description 'Java library to support jsonrpc tests.'
         url 'https://github.com/ICOnator/testrpcj'
         inceptionYear '2018'
         scm {
