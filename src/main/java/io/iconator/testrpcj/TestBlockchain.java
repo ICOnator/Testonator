@@ -58,8 +58,9 @@ public class TestBlockchain {
         return new SolidityCompiler(SystemProperties.getDefault());
     }
 
-    public TestBlockchain start() throws Exception {
-        return start(DEFAULT_PORT);
+    public static TestBlockchain start() throws Exception {
+        TestBlockchain t = new TestBlockchain();
+        return t.start(DEFAULT_PORT);
     }
 
     public TestBlockchain start(int port) throws Exception {
@@ -97,7 +98,7 @@ public class TestBlockchain {
         return this;
     }
 
-    private TestBlockchain stop() throws Exception {
+    public TestBlockchain stop() throws Exception {
         server.stop();
         server.destroy();
         server = null;

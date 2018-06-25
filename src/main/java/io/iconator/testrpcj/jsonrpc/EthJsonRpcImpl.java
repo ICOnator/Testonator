@@ -30,6 +30,7 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.listener.LogFilter;
 import org.ethereum.mine.MinerIfc;
+import org.ethereum.mine.MinerListener;
 import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.ethereum.util.BuildInfo;
 import org.ethereum.util.ByteUtil;
@@ -141,6 +142,11 @@ public class EthJsonRpcImpl implements JsonRpc {
             miningBlock = block;
             miningTask = SettableFuture.create();
             return miningTask;
+        }
+
+        @Override
+        public void setListeners(Collection<MinerListener> var1) {
+
         }
 
         @Override
@@ -257,7 +263,7 @@ public class EthJsonRpcImpl implements JsonRpc {
         matcher.matches();
 
         return Arrays.asList(
-                "Harmony", "vX.Y",
+                "TestRPC-J/Harmony", "v1",
                 System.getProperty("os.name"),
                 "Java" + matcher.group(1),
                 "-" + BuildInfo.buildHash).stream()
