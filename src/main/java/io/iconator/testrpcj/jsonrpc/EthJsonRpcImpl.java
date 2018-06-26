@@ -470,7 +470,8 @@ public class EthJsonRpcImpl implements JsonRpc {
             // zero value should be sent as empty byte array
             // otherwise tx will be accepted by core, but never included in block
 //            throw new RuntimeException("Field 'value' should not have leading zero");
-            log.warn("Transaction might use incorrect zero value");
+            byte[] txRaw = tx.getValue();
+            log.warn("Transaction might use incorrect zero value: "+txRaw);
         }
         standaloneBlockchain.submitTransaction(tx);
     }

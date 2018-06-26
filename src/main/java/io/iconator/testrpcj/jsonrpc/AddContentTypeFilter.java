@@ -34,7 +34,7 @@ import java.util.List;
 @WebFilter(urlPatterns = "/rpc")
 public class AddContentTypeFilter implements Filter {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AddContentTypeFilter.class);
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(AddContentTypeFilter.class);
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -48,7 +48,7 @@ public class AddContentTypeFilter implements Filter {
             HttpServletResponse httpResponse = (HttpServletResponse) response;
 
             if ("/rpc".equals(httpRequest.getRequestURI())) {
-                log.info("Found " + httpRequest.getRequestURI());
+                LOG.debug("Found " + httpRequest.getRequestURI());
                 AddParamsToHeader updatedRequest = new AddParamsToHeader((HttpServletRequest) request);
                 httpResponse.addHeader("content-type", "application/json");
                 httpResponse.addHeader("accept", "application/json");
@@ -76,7 +76,7 @@ class AddParamsToHeader extends HttpServletRequestWrapper {
     }
 
     public String getHeader(String name) {
-        log.info("getHeader " + name + ". Result:" + super.getHeader(name));
+        log.debug("getHeader " + name + ". Result:" + super.getHeader(name));
         if (name != null && "content-type".equals(name.toLowerCase())) {
             return "application/json";
         }

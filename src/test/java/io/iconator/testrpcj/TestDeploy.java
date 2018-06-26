@@ -1,7 +1,9 @@
 package io.iconator.testrpcj;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.solidity.compiler.CompilationResult;
+import org.ethereum.solidity.compiler.SolidityCompiler;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -12,12 +14,11 @@ import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthCompileSolidity;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.tuples.generated.Tuple2;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
@@ -59,8 +60,8 @@ public class TestDeploy {
                 "contract Example1 {\n" +
                 "\tuint counter;\n" +
                 "}";
-        Result r = TestBlockchain.compiler().compile(
-                contractSrc.getBytes(), true, ABI, BIN, INTERFACE, METADATA, GAS);
+        Result r = new SolidityCompiler(SystemProperties.getDefault()).compile(
+                contractSrc.getBytes(), true, ABI, BIN, INTERFACE, METADATA);
         Assert.assertTrue(!r.isFailed());
         CompilationResult result = CompilationResult.parse(r.output);
         CompilationResult.ContractMetadata a = result.getContract("Example1");
@@ -99,17 +100,8 @@ public class TestDeploy {
                 "contract Example3 {\n" +
                 "    uint32 test;\n" +
                 "}";
-        Map<String, Tuple2<EthCompileSolidity.Code, List<Tuple2<CallTransaction.Function, BigInteger>>>> ret =
-                Utils.compile(contractSrc);
-
-        System.out.println(ret);
-        //Map<String, Integer> gas = Utils.parseGasEstimation(r);
-
-        //CompilationResult result = CompilationResult.parse(r);
-        //CompilationResult.ContractMetadata a = result.getContract("Example1");
-        //CallTransaction.Contract contract = new CallTransaction.Contract(a.abi);
-        //contract.getConstructor();
-
+        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        Assert.assertEquals(2, ret.size());
     }
 
     @Test
@@ -127,30 +119,91 @@ public class TestDeploy {
                 "\t    return counter;\n" +
                 "\t}\n" +
                 "}";
-        Map<String, Tuple2<EthCompileSolidity.Code, List<Tuple2<CallTransaction.Function, BigInteger>>>> ret =
-                Utils.compile(contractSrc);
+        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
 
-        EthCompileSolidity.Code c = ret.get("Exampl2").getValue1();
-        Tuple2<String, EthSendTransaction> res = Utils.deploy(web3j, TestBlockchain.ACCOUNT_0, c.getCode());
-        System.out.println(res.getValue2().hasError());
+        EthCompileSolidity.Code c = ret.get("Exampl2").code();
+
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.ACCOUNT_0, ret.get("Exampl2"));
 
         final Function function = new Function("counter",
                 Arrays.<Type>asList(),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
 
-        String value = Utils.callConstant(web3j, TestBlockchain.ACCOUNT_0, res.getValue1(), function).get(0).getValue().toString();
-        Assert.assertEquals("12", value);
+        Type t = testBlockchain.callConstant( TestBlockchain.ACCOUNT_0, deployed.contractAddress(), function).get(0);
+
+        Assert.assertEquals("12", t.getValue().toString());
 
         final Function function2 = new Function("set",
                 Arrays.<Type>asList(new Uint256(13L)),
-                Arrays.<TypeReference<?>>asList());
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
 
-        String re = Utils.call(web3j, TestBlockchain.ACCOUNT_0, res.getValue1(), BigInteger.ZERO, function2, ret.get("Exampl2").getValue2().get(2).getValue2());
-        System.out.println(re);
+
+        List<Event> events = testBlockchain.call(
+                TestBlockchain.ACCOUNT_0, deployed, BigInteger.ZERO, function2);
+        System.out.println(events);
+
+        String value = testBlockchain.callConstant(
+                TestBlockchain.ACCOUNT_0, deployed.contractAddress(), function).get(0).getValue().toString();
+        Assert.assertEquals(value, "13");
+
     }
 
     @Test
-    public void testCall() {
-        //Contract
+    public void testCall() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        String contractSrc = "pragma solidity ^0.4.24;\n" +
+                "\n" +
+                "contract Exampl2 {\n" +
+                "\tuint256 public counter = 15;\n" +
+                "\tfunction set(uint256 _counter) public returns (uint256) {\n" +
+                "\t    uint256 tmp = counter;\n" +
+                "\t    counter = _counter;\n" +
+                "\t    return tmp;\n" +
+                "\t}\n" +
+                "\tfunction get() public view returns (uint256) {\n" +
+                "\t    return counter;\n" +
+                "\t}\n" +
+                "}";
+        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        BigInteger balance = testBlockchain.balance(TestBlockchain.ACCOUNT_0);
+        System.out.println("balance1: "+balance);
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.ACCOUNT_0, ret.get("Exampl2"));
+        testBlockchain.call(deployed, "set", Long.valueOf(5));
+        BigInteger balance2 = testBlockchain.balance(TestBlockchain.ACCOUNT_0);
+        Assert.assertNotEquals(balance, balance2);
+        System.out.println("balance2: "+balance2);
+
+        String value = testBlockchain.callConstant(deployed, "get").get(0).getValue().toString();
+        Assert.assertEquals(value, "5");
+        Assert.assertEquals(balance2, testBlockchain.balance(TestBlockchain.ACCOUNT_0));
+    }
+
+    @Test
+    public void testEvents() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        String contractSrc ="pragma solidity ^0.4.24;\n" +
+                "\n" +
+                "contract ExampleEvent {\n" +
+                "\tuint256 public counter=3;\n" +
+                "\tevent Message(string, uint256);\n" +
+                "\tfunction set(uint256 _counter) public returns (uint256) {\n" +
+                "\t    uint256 tmp = counter;\n" +
+                "\t    counter = _counter;\n" +
+                "\t    emit Message(\"hey there1\", _counter);\n" +
+                "\t    emit Message(\"hey there2\", tmp);\n" +
+                "\t    return tmp;\n" +
+                "\t}\n" +
+                "\tfunction get() public view returns (uint256) {\n" +
+                "\t    return counter;\n" +
+                "\t}\n" +
+                "}\n";
+        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        Contract contract = ret.get("ExampleEvent");
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.ACCOUNT_0, contract);
+        List<Event> events = testBlockchain.call(deployed, "set", Long.valueOf(5));
+        Assert.assertEquals(2, events.size());
+        Assert.assertEquals(events.get(0).values().get(0).getValue().toString(), "hey there1");
+
+        Assert.assertEquals(events.get(0).values().get(1).getValue().toString(), "5");
+        Assert.assertEquals(events.get(1).values().get(1).getValue().toString(), "3");
+
     }
 }
