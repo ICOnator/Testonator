@@ -17,15 +17,12 @@ package io.iconator.testrpcj;
  */
 
 import com.googlecode.jsonrpc4j.JsonRpcServer;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@SuppressWarnings("serial")
 public class RPCServlet extends HttpServlet {
 
     private JsonRpcServer jsonRpcServer;
@@ -37,18 +34,11 @@ public class RPCServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-
-        Assert.state(this.jsonRpcServer != null, "No JsonRpcServer available");
-
-        LocaleContextHolder.setLocale(request.getLocale());
         try {
             jsonRpcServer.handle(request, response);
             response.getOutputStream().flush();
         } catch (IOException ex) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
-        } finally {
-            LocaleContextHolder.resetLocaleContext();
         }
     }
 }
-

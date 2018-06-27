@@ -23,6 +23,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
 import static org.ethereum.solidity.compiler.SolidityCompiler.Result;
@@ -31,10 +32,13 @@ public class TestDeploy {
     private static TestBlockchain testBlockchain;
     private static Web3j web3j;
 
+    private static long start = System.currentTimeMillis();
+
     @BeforeClass
     public static void setup() throws Exception {
         testBlockchain = TestBlockchain.start();
         web3j = Web3j.build(new HttpService("http://localhost:8545/rpc"));
+        System.out.println("setup done: "+(System.currentTimeMillis()-start));
     }
 
     @AfterClass
@@ -105,7 +109,7 @@ public class TestDeploy {
     }
 
     @Test
-    public void testDeploy() throws IOException {
+    public void testDeploy() throws IOException, ExecutionException, InterruptedException {
         String contractSrc = "pragma solidity ^0.4.24;\n" +
                 "\n" +
                 "contract Exampl2 {\n" +
@@ -123,13 +127,13 @@ public class TestDeploy {
 
         EthCompileSolidity.Code c = ret.get("Exampl2").code();
 
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.ACCOUNT_0, ret.get("Exampl2"));
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, ret.get("Exampl2"));
 
         final Function function = new Function("counter",
                 Arrays.<Type>asList(),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
 
-        Type t = testBlockchain.callConstant( TestBlockchain.ACCOUNT_0, deployed.contractAddress(), function).get(0);
+        Type t = testBlockchain.callConstant( TestBlockchain.CREDENTIAL_0, deployed.contractAddress(), function).get(0);
 
         Assert.assertEquals("12", t.getValue().toString());
 
@@ -139,17 +143,17 @@ public class TestDeploy {
 
 
         List<Event> events = testBlockchain.call(
-                TestBlockchain.ACCOUNT_0, deployed, BigInteger.ZERO, function2);
+                TestBlockchain.CREDENTIAL_0, deployed, BigInteger.ZERO, function2);
         System.out.println(events);
 
         String value = testBlockchain.callConstant(
-                TestBlockchain.ACCOUNT_0, deployed.contractAddress(), function).get(0).getValue().toString();
+                TestBlockchain.CREDENTIAL_0, deployed.contractAddress(), function).get(0).getValue().toString();
         Assert.assertEquals(value, "13");
 
     }
 
     @Test
-    public void testCall() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public void testCall() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException {
         String contractSrc = "pragma solidity ^0.4.24;\n" +
                 "\n" +
                 "contract Exampl2 {\n" +
@@ -164,21 +168,22 @@ public class TestDeploy {
                 "\t}\n" +
                 "}";
         Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
-        BigInteger balance = testBlockchain.balance(TestBlockchain.ACCOUNT_0);
+        BigInteger balance = testBlockchain.balance(TestBlockchain.CREDENTIAL_0);
         System.out.println("balance1: "+balance);
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.ACCOUNT_0, ret.get("Exampl2"));
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, ret.get("Exampl2"));
         testBlockchain.call(deployed, "set", Long.valueOf(5));
-        BigInteger balance2 = testBlockchain.balance(TestBlockchain.ACCOUNT_0);
+        BigInteger balance2 = testBlockchain.balance(TestBlockchain.CREDENTIAL_0);
         Assert.assertNotEquals(balance, balance2);
         System.out.println("balance2: "+balance2);
 
         String value = testBlockchain.callConstant(deployed, "get").get(0).getValue().toString();
         Assert.assertEquals(value, "5");
-        Assert.assertEquals(balance2, testBlockchain.balance(TestBlockchain.ACCOUNT_0));
+        Assert.assertEquals(balance2, testBlockchain.balance(TestBlockchain.CREDENTIAL_0));
     }
 
     @Test
-    public void testEvents() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public void testEvents() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException {
+        start = System.currentTimeMillis();
         String contractSrc ="pragma solidity ^0.4.24;\n" +
                 "\n" +
                 "contract ExampleEvent {\n" +
@@ -196,9 +201,15 @@ public class TestDeploy {
                 "\t}\n" +
                 "}\n";
         Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        System.out.println("compile done: "+(System.currentTimeMillis()-start));
+        start = System.currentTimeMillis();
         Contract contract = ret.get("ExampleEvent");
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.ACCOUNT_0, contract);
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract);
+        System.out.println("deploy done: "+(System.currentTimeMillis()-start));
+        start = System.currentTimeMillis();
         List<Event> events = testBlockchain.call(deployed, "set", Long.valueOf(5));
+        System.out.println("call done: "+(System.currentTimeMillis()-start));
+        start = System.currentTimeMillis();
         Assert.assertEquals(2, events.size());
         Assert.assertEquals(events.get(0).values().get(0).getValue().toString(), "hey there1");
 

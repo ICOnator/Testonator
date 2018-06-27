@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
 
@@ -54,6 +55,17 @@ public class TestBlockchain {
     public final static ECKey ACCOUNT_7 = ECKey.fromPrivate(Hex.decode("d58fd771caefbdcca0c23fbc440fd03dacdee29cc4668cc9fc5acf29b4219f41"));
     public final static ECKey ACCOUNT_8 = ECKey.fromPrivate(Hex.decode("649f638d220fd6319ca4af8f5e0e261d15a66172830077126fef21fdbdd95410"));
     public final static ECKey ACCOUNT_9 = ECKey.fromPrivate(Hex.decode("ea8f71fc4690e0733f3478c3d8e53790988b9e51deabd10185364bc59c58fdba"));
+
+    public final static Credentials CREDENTIAL_0 = create(ACCOUNT_0);
+    public final static Credentials CREDENTIAL_1 = create(ACCOUNT_1);
+    public final static Credentials CREDENTIAL_2 = create(ACCOUNT_2);
+    public final static Credentials CREDENTIAL_3 = create(ACCOUNT_3);
+    public final static Credentials CREDENTIAL_4 = create(ACCOUNT_4);
+    public final static Credentials CREDENTIAL_5 = create(ACCOUNT_5);
+    public final static Credentials CREDENTIAL_6 = create(ACCOUNT_6);
+    public final static Credentials CREDENTIAL_7 = create(ACCOUNT_7);
+    public final static Credentials CREDENTIAL_8 = create(ACCOUNT_8);
+    public final static Credentials CREDENTIAL_9 = create(ACCOUNT_9);
 
     public final static Integer DEFAULT_PORT = 8545;
     public static final BigInteger GAS_PRICE = BigInteger.valueOf(10_000_000_000L);
@@ -135,39 +147,39 @@ public class TestBlockchain {
         return web3j;
     }
 
-    public BigInteger balance(ECKey address) throws IOException {
-        return web3j.ethGetBalance(create(address).getAddress(), DefaultBlockParameterName.LATEST).send().getBalance();
+    public BigInteger balance(Credentials credential) throws IOException, ExecutionException, InterruptedException {
+        return web3j.ethGetBalance(credential.getAddress(), DefaultBlockParameterName.LATEST).sendAsync().get().getBalance();
     }
 
-    public BigInteger balance(String address) throws IOException {
-        return web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send().getBalance();
+    public BigInteger balance(String address) throws IOException, ExecutionException, InterruptedException {
+        return web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).sendAsync().get().getBalance();
     }
 
-    public BigInteger nonce(Credentials credentials) throws IOException {
+    public BigInteger nonce(Credentials credentials) throws IOException, ExecutionException, InterruptedException {
         EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
-                credentials.getAddress(), DefaultBlockParameterName.LATEST).send();
+                credentials.getAddress(), DefaultBlockParameterName.LATEST).sendAsync().get();
         return ethGetTransactionCount.getTransactionCount();
     }
 
     public static Credentials create(ECKey ecKey) {
-        ECKeyPair pair = ECKeyPair.create(ecKey.getPrivKey());
+        BigInteger privKey = ecKey.getPrivKey();
+        ECKeyPair pair = new ECKeyPair(privKey, Sign.publicKeyFromPrivate(privKey));
         return Credentials.create(pair);
     }
 
     public List<Type> callConstant(DeployedContract contract, String name, Object... parameters)
-            throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+            throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, ExecutionException, InterruptedException {
         Function function = createFunction(contract.contract(), name, parameters);
-        return callConstant(contract.owner(), contract.contractAddress(), function);
+        return callConstant(contract.credential(), contract.contractAddress(), function);
     }
 
-    public List<Type> callConstant(ECKey account, String contractAddress, Function function)
-            throws IOException {
-        Credentials credentials = create(account);
+    public List<Type> callConstant(Credentials credential, String contractAddress, Function function)
+            throws IOException, ExecutionException, InterruptedException {
         String encodedFunction = FunctionEncoder.encode(function);
         org.web3j.protocol.core.methods.response.EthCall ethCall = web3j.ethCall(
                 Transaction.createEthCallTransaction(
-                        credentials.getAddress(), contractAddress, encodedFunction),
-                DefaultBlockParameterName.LATEST).send();
+                        credential.getAddress(), contractAddress, encodedFunction),
+                DefaultBlockParameterName.LATEST).sendAsync().get();
 
         if (ethCall.hasError()) {
             throw new IOException(ethCall.getError().toString());
@@ -178,22 +190,21 @@ public class TestBlockchain {
     }
 
     public List<Event> call(DeployedContract contract, String name, Object... parameters)
-            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
+            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException {
 
-        return call(contract.owner(), contract, BigInteger.ZERO, name, parameters);
+        return call(contract.credential(), contract, BigInteger.ZERO, name, parameters);
     }
 
-    public List<Event> call(ECKey account, DeployedContract contract, BigInteger weiValue,
+    public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue,
                            String name, Object... parameters)
-            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
+            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException {
 
         Function function =  createFunction(contract.contract(), name, parameters);
-        return call(account, contract, weiValue, function);
+        return call(credential, contract, weiValue, function);
     }
 
-    public List<Event> call(ECKey account, DeployedContract contract, BigInteger weiValue, Function function) throws IOException {
-        Credentials credentials = create(account);
-        BigInteger nonce = nonce(credentials);
+    public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue, Function function) throws IOException, ExecutionException, InterruptedException {
+        BigInteger nonce = nonce(credential);
         String encodedFunction = FunctionEncoder.encode(function);
         RawTransaction rawTransaction = RawTransaction.createTransaction(
                 nonce,
@@ -203,16 +214,16 @@ public class TestBlockchain {
                 weiValue,
                 encodedFunction);
 
-        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
+        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credential);
 
         String hexValue = Numeric.toHexString(signedMessage);
 
-        EthSendTransaction ret = web3j.ethSendRawTransaction(hexValue).send();
+        EthSendTransaction ret = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         if (ret.hasError()) {
             throw new IOException(ret.getError().toString());
         }
 
-        EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(ret.getTransactionHash()).send();
+        EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(ret.getTransactionHash()).sendAsync().get();
 
         List<Event> events = new ArrayList<>();
         //get logs and return them
@@ -232,27 +243,25 @@ public class TestBlockchain {
         return events;
     }
 
-    public DeployedContract deploy(ECKey account, Contract contract) throws IOException {
-        return deploy(account, contract, BigInteger.ZERO);
+    public DeployedContract deploy(Credentials credential, Contract contract) throws IOException, ExecutionException, InterruptedException {
+        return deploy(credential, contract, BigInteger.ZERO);
     }
 
-    public DeployedContract deploy(ECKey account, Contract contract, BigInteger value) throws IOException {
-        Credentials credentials = create(account);
-        BigInteger nonce = nonce(credentials);
-
+    public DeployedContract deploy(Credentials credential, Contract contract, BigInteger value) throws IOException, ExecutionException, InterruptedException {
+        BigInteger nonce = nonce(credential);
         // create our transaction
         RawTransaction rawTransaction = RawTransaction.createContractTransaction(
                 nonce, GAS_PRICE, GAS_LIMIT, value, contract.code().getCode());
 
         // sign & send our transaction
-        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
+        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credential);
         String hexValue = org.bouncycastle.util.encoders.Hex.toHexString(signedMessage);
-        String contractAddress = ContractUtils.generateContractAddress(credentials.getAddress(), nonce);
+        String contractAddress = ContractUtils.generateContractAddress(credential.getAddress(), nonce);
 
-        EthSendTransaction tx = web3j.ethSendRawTransaction(hexValue).send();
-        EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(tx.getTransactionHash()).send();
+        EthSendTransaction tx = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
+        EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(tx.getTransactionHash()).sendAsync().get();
 
-        return new DeployedContract(tx, contractAddress, account, receipt, contract);
+        return new DeployedContract(tx, contractAddress, credential, receipt, contract);
     }
 
     public static Map<String, Contract> compile(String contractSrc) throws IOException {
