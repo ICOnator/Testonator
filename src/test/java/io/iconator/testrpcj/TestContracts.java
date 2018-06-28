@@ -20,6 +20,7 @@ import org.web3j.protocol.http.HttpService;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
 import static org.ethereum.solidity.compiler.SolidityCompiler.Result;
-public class TestDeploy {
+public class TestContracts {
 
     private static TestBlockchain testBlockchain;
     private static Web3j web3j;
@@ -217,4 +218,29 @@ public class TestDeploy {
         Assert.assertEquals(events.get(1).values().get(1).getValue().toString(), "3");
 
     }
+
+    @Test
+    public void testArrays() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        String contractSrc = "contract Example2 {\n" +
+                "uint8 public result;\n" +
+                "    function mint(uint8[] numbers) public {\n" +
+                "        for(uint8 i = 0;i<numbers.length;i++) {\n" +
+                "            result += numbers[i];\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        Contract contract = ret.get("Example2");
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract);
+
+        List<Long> list = new ArrayList<>();
+        list.add(10L);
+        list.add(20L);
+        list.add(12L);
+        List<Event> events = testBlockchain.call(deployed, "mint", list);
+
+        Object result = testBlockchain.callConstant(deployed, "result").get(0).getValue();
+        Assert.assertEquals(new BigInteger("42"), result);
+    }
+
 }

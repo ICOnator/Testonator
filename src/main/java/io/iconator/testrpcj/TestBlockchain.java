@@ -19,6 +19,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.DynamicArray;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.AbiTypes;
@@ -339,7 +340,7 @@ public class TestBlockchain {
                 int len = f.inputs.length;
                 for (int i = 0; i < len; i++) {
                     CallTransaction.Param p = f.inputs[i];
-                    Type<?> t = convertTypes(p, input[i]);
+                    Type<?> t = convertTypes(p.getType(), input[i]);
                     inputParameters.add(t);
                 }
 
@@ -368,52 +369,68 @@ public class TestBlockchain {
     }
 
 
-    private static Type<?> convertTypes(CallTransaction.Param p, Object param)
+    private static Type<?> convertTypes(String type, Object param)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        Class c = AbiTypes.getType(p.getType());
-        if (p.getType().startsWith("uint") || p.getType().startsWith("int")) {
-            if (!(param instanceof Long) && !(param instanceof BigInteger)) {
+
+        if(type.contains("[]")) {
+            if(!(param instanceof List)) {
                 throw new RuntimeException(
-                        "expected Long or BigInteger for uint, but got "
+                        "expected List for an array type got "
                                 + param.getClass());
             }
-        } else if (p.getType().startsWith("bytes")) {
-            if (!(param instanceof byte[])) {
-                throw new RuntimeException(
-                        "expected byte[] for bytes*, but got "
-                                + param.getClass());
+            List<Type<?>> retVal = new ArrayList<>();
+            for(Object o:((List)param)) {
+                Type<?> value = convertTypes(type.replace("[]",""), o);
+                retVal.add(value);
             }
-        } else if (p.getType().startsWith("address")) {
-            if (!(param instanceof Uint160
-                    && !(param instanceof BigInteger)
-                    && !(param instanceof String))) {
-                throw new RuntimeException(
-                        "expected Uint160, BigInteger, or String for address, but got "
-                                + param.getClass());
-            }
-        } else if (p.getType().startsWith("bool")) {
-            if (!(param instanceof Boolean)) {
-                throw new RuntimeException(
-                        "expected Boolean for bool, but got "
-                                + param.getClass());
-            }
-        } else if (p.getType().startsWith("string")) {
-            if (!(param instanceof String)) {
-                throw new RuntimeException(
-                        "expected String for string, but got "
-                                + param.getClass());
-            }
+            return new DynamicArray(retVal);
         } else {
-            throw new RuntimeException(
-                    "expected something known, this is unkown "
-                            + p.getType());
-        }
-        if (param instanceof Long) {
-            return (Type<?>) c.getDeclaredConstructor(long.class).newInstance(((Long) param).longValue());
-        } else if (param instanceof Boolean) {
-            return (Type<?>) c.getDeclaredConstructor(boolean.class).newInstance(((Boolean) param).booleanValue());
-        } else {
-            return (Type<?>) c.getDeclaredConstructor(param.getClass()).newInstance(param);
+            Class c = AbiTypes.getType(type);
+
+            if (type.startsWith("uint") || type.startsWith("int")) {
+                if (!(param instanceof Long) && !(param instanceof BigInteger)) {
+                    throw new RuntimeException(
+                            "expected Long or BigInteger for uint, but got "
+                                    + param.getClass());
+                }
+            } else if (type.startsWith("bytes")) {
+                if (!(param instanceof byte[])) {
+                    throw new RuntimeException(
+                            "expected byte[] for bytes*, but got "
+                                    + param.getClass());
+                }
+            } else if (type.startsWith("address")) {
+                if (!(param instanceof Uint160
+                        && !(param instanceof BigInteger)
+                        && !(param instanceof String))) {
+                    throw new RuntimeException(
+                            "expected Uint160, BigInteger, or String for address, but got "
+                                    + param.getClass());
+                }
+            } else if (type.startsWith("bool")) {
+                if (!(param instanceof Boolean)) {
+                    throw new RuntimeException(
+                            "expected Boolean for bool, but got "
+                                    + param.getClass());
+                }
+            } else if (type.startsWith("string")) {
+                if (!(param instanceof String)) {
+                    throw new RuntimeException(
+                            "expected String for string, but got "
+                                    + param.getClass());
+                }
+            } else {
+                throw new RuntimeException(
+                        "expected something known, this is unkown "
+                                + type);
+            }
+            if (param instanceof Long) {
+                return (Type<?>) c.getDeclaredConstructor(long.class).newInstance(((Long) param).longValue());
+            } else if (param instanceof Boolean) {
+                return (Type<?>) c.getDeclaredConstructor(boolean.class).newInstance(((Boolean) param).booleanValue());
+            } else {
+                return (Type<?>) c.getDeclaredConstructor(param.getClass()).newInstance(param);
+            }
         }
     }
 }
