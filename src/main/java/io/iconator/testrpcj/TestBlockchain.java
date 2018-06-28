@@ -32,6 +32,7 @@ import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
 
 import javax.servlet.DispatcherType;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
@@ -74,6 +75,7 @@ public class TestBlockchain {
     private Server server = null;
     private StandaloneBlockchain standaloneBlockchain = null;
     private Web3j web3j;
+    private ServletHolder holder;
 
     public static void main(String[] args) throws Exception {
         Integer port = null;
@@ -110,29 +112,50 @@ public class TestBlockchain {
         context.setContextPath("/");
         server.setHandler(context);
 
-        standaloneBlockchain = new StandaloneBlockchain()
-                .withAccountBalance(TestBlockchain.ACCOUNT_0.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAccountBalance(TestBlockchain.ACCOUNT_1.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAccountBalance(TestBlockchain.ACCOUNT_2.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAccountBalance(TestBlockchain.ACCOUNT_3.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAccountBalance(TestBlockchain.ACCOUNT_4.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAccountBalance(TestBlockchain.ACCOUNT_5.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAccountBalance(TestBlockchain.ACCOUNT_6.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAccountBalance(TestBlockchain.ACCOUNT_7.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAccountBalance(TestBlockchain.ACCOUNT_8.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAccountBalance(TestBlockchain.ACCOUNT_9.getAddress(), EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAutoblock(true);  //after each transaction, a new block will be created
-        standaloneBlockchain.createBlock();
-        EthJsonRpcImpl ethJsonRpcImpl = new EthJsonRpcImpl(standaloneBlockchain);
-
-        JsonRpcServer rpcServer = new JsonRpcServer(new ObjectMapper(), ethJsonRpcImpl, JsonRpc.class);
-        RPCServlet rpcServlet = new RPCServlet(rpcServer);
-        ServletHolder holder = new ServletHolder(rpcServlet);
+        RPCServlet rpcServlet = createBlockchainServlet();
+        holder = new ServletHolder(rpcServlet);
         context.addServlet(holder, "/rpc");
         context.addFilter(AddContentTypeFilter.class, "/rpc", EnumSet.of(DispatcherType.REQUEST));
         server.start();
 
         return this;
+    }
+
+    private RPCServlet createBlockchainServlet() {
+        standaloneBlockchain = new StandaloneBlockchain()
+                .withAccountBalance(TestBlockchain.ACCOUNT_0.getAddress(),
+                        EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_1.getAddress(),
+                        EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_2.getAddress(),
+                        EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_3.getAddress(),
+                        EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_4.getAddress(),
+                        EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_5.getAddress(),
+                        EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_6.getAddress(),
+                        EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_7.getAddress(),
+                        EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_8.getAddress(),
+                        EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAccountBalance(TestBlockchain.ACCOUNT_9.getAddress(),
+                        EtherUtil.convert(10, EtherUtil.Unit.ETHER))
+                .withAutoblock(true);  //after each transaction, a new block will be created
+        standaloneBlockchain.createBlock();
+        EthJsonRpcImpl ethJsonRpcImpl = new EthJsonRpcImpl(standaloneBlockchain);
+
+        JsonRpcServer rpcServer = new JsonRpcServer(new ObjectMapper(), ethJsonRpcImpl, JsonRpc.class);
+        return new RPCServlet(rpcServer);
+    }
+
+    public void reset() {
+        if(holder != null) {
+            RPCServlet rpcServlet = createBlockchainServlet();
+            holder.setServlet(rpcServlet);
+        }
     }
 
     public TestBlockchain stop() throws Exception {
@@ -185,7 +208,6 @@ public class TestBlockchain {
             throw new IOException(ethCall.getError().toString());
         }
         String value = ethCall.getValue();
-        System.out.println(value);
         return FunctionReturnDecoder.decode(value, function.getOutputParameters());
     }
 
@@ -264,6 +286,16 @@ public class TestBlockchain {
         return new DeployedContract(tx, contractAddress, credential, receipt, contract);
     }
 
+    public static Map<String, Contract> compile(File source) throws IOException {
+        SolidityCompiler.Result result = new SolidityCompiler(SystemProperties.getDefault()).compileSrc(
+                source, true, true, ABI, BIN, INTERFACE, METADATA);
+        if (result.isFailed()) {
+            throw new IOException(result.errors);
+        }
+        CompilationResult parsed = CompilationResult.parse(result.output);
+        return compile(parsed);
+    }
+
     public static Map<String, Contract> compile(String contractSrc) throws IOException {
         SolidityCompiler.Result result = new SolidityCompiler(SystemProperties.getDefault()).compile(
                 contractSrc.getBytes(), true, ABI, BIN, INTERFACE, METADATA);
@@ -272,7 +304,10 @@ public class TestBlockchain {
         }
 
         CompilationResult parsed = CompilationResult.parse(result.output);
+        return compile(parsed);
+    }
 
+    private static Map<String, Contract> compile(CompilationResult parsed) throws IOException {
         Map<String, Contract> retVal = new HashMap<>();
         for (String key : parsed.getContractKeys()) {
             String name = key.substring(key.lastIndexOf(58) + 1);
