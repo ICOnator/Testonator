@@ -20,10 +20,7 @@ import org.web3j.protocol.http.HttpService;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
@@ -243,4 +240,29 @@ public class TestContracts {
         Assert.assertEquals(new BigInteger("42"), result);
     }
 
+    @Test
+    public void testLibrary() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        String contractSrc1 = "pragma solidity ^0.4.24;\n" +
+                "import \"./LibraryTest.sol\";\n" +
+                "contract LibImport {\n" +
+                "    using LibTest for uint256;\n" +
+                "    function testMe() public view returns (uint256) {\n" +
+                "        uint256 a = 0;\n" +
+                "        return a.test();\n" +
+                "    }\n" +
+                "}";
+        String contractSrc2 = "pragma solidity ^0.4.24;\n" +
+                "library LibTest {\n" +
+                "    function test(uint256 a) pure returns (uint256) {\n" +
+                "        return 42;\n" +
+                "    }\n" +
+                "}";
+        Map<String, String> contracts = new HashMap<>();
+        contracts.put("./LibraryTest.sol", contractSrc2);
+        Map<String, Contract> ret = TestBlockchain.compileInline(contractSrc1, contracts);
+        Contract contract = ret.get("LibTest");
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract);
+        Object result = testBlockchain.callConstant(deployed, "test", 4L).get(0).getValue();
+        Assert.assertEquals(new BigInteger("42"), result);
+    }
 }

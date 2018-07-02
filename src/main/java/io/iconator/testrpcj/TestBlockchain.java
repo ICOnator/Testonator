@@ -39,6 +39,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
 
@@ -297,6 +299,24 @@ public class TestBlockchain {
         return compile(parsed);
     }
 
+    public static Map<String, Contract> compileInline(String contractSrc, Map<String, String> dependencies) throws IOException {
+        Pattern p = Pattern.compile("\\s*import\\s*\"([^\"]*)\"\\s*;");
+        Matcher m = p.matcher(contractSrc);
+        int start = 0;
+        StringBuilder sb = new StringBuilder();
+        while(m.find(start)) {
+            start = m.end();
+            sb.append(contractSrc.substring(0, m.start()));
+            sb.append(stripPragma(dependencies.get(m.group(1))));
+            sb.append(contractSrc.substring(m.end()));
+        }
+        return compile(sb.toString());
+    }
+
+    private static String stripPragma(String contractSrc) {
+        return contractSrc.replaceAll("\\s*pragma\\s*solidity.*;", "");
+    }
+
     public static Map<String, Contract> compile(String contractSrc) throws IOException {
         SolidityCompiler.Result result = new SolidityCompiler(SystemProperties.getDefault()).compile(
                 contractSrc.getBytes(), true, ABI, BIN, INTERFACE, METADATA);
@@ -334,7 +354,8 @@ public class TestBlockchain {
                             "contract input argument length: "
                                     + f.inputs.length
                                     + " does not match user input length: "
-                                    + input.length);
+                                    + input.length
+                                    + ". Function: "+f);
                 }
                 List<Type> inputParameters = new ArrayList<>();
                 int len = f.inputs.length;
