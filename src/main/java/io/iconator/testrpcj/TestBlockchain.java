@@ -281,12 +281,41 @@ public class TestBlockchain {
         //get logs and return them
         for(Log log:receipt.getResult().getLogs()) {
             //search topic
+
             for(String topic:log.getTopics()) {
                 for(CallTransaction.Function f:contract.contract().functions()) {
                     if(Hash.sha3String(f.formatSignature()).equals(topic)) {
                         //match! now we now the parameters
-                        List<TypeReference<Type>> output = createEvent(f);
-                        List<Type> values = FunctionReturnDecoder.decode(log.getData(), output);
+
+                        //first indexed parameters
+                        StringBuilder sb = new StringBuilder("0x");
+                        for(String topic2:log.getTopics()) {
+                            if(!topic.equals(topic2)) {
+                                sb.append(topic2.substring(2));
+                            }
+                        }
+                        Map<Integer, TypeReference<Type>> outputIndexed = createEventIndexed(f, true);
+                        List<TypeReference<Type>> tmp = new ArrayList<>(outputIndexed.values());
+                        List<Type> valuesIndexed = FunctionReturnDecoder.decode(sb.toString(), tmp);
+
+                        //then non-indexed parameters
+                        Map<Integer, TypeReference<Type>> outputNonIndexed = createEventIndexed(f, false);
+                        tmp = new ArrayList<>(outputNonIndexed.values());
+                        List<Type> valuesNonIndexed = FunctionReturnDecoder.decode(log.getData(), tmp);
+
+                        //merge everything in the right order
+                        List<Type> values = new ArrayList<>();
+                        int len = valuesIndexed.size()+valuesNonIndexed.size();
+                        for(int i=0;i<len;i++) {
+                            if(outputIndexed.containsKey(i)) {
+                                values.add(valuesIndexed.remove(0));
+                            } else if(outputNonIndexed.containsKey(i)) {
+                                values.add(valuesNonIndexed.remove(0));
+                            } else {
+                                throw new RuntimeException("cannot happen");
+                            }
+                        }
+
                         events.add(new Event(values, f.name, f.formatSignature(), topic));
                     }
                 }
@@ -472,6 +501,20 @@ public class TestBlockchain {
             }
         }
         return null;
+    }
+
+    private static Map<Integer, TypeReference<Type>> createEventIndexed(CallTransaction.Function f, boolean indexed) {
+        Map<Integer, TypeReference<Type>> outputParameters = new LinkedHashMap<>();
+        int len = f.inputs.length;
+        for (int i = 0; i < len; i++) {
+
+            CallTransaction.Param p = f.inputs[i];
+            if(!(p.indexed ^ indexed)) {
+                TypeReference<Type> t = TypeReference.<Type>create((Class<Type>) AbiTypes.getType(p.getType()));
+                outputParameters.put(i, t);
+            }
+        }
+        return outputParameters;
     }
 
     private static List<TypeReference<Type>> createEvent(CallTransaction.Function f) {

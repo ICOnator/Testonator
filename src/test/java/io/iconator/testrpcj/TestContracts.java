@@ -218,6 +218,44 @@ public class TestContracts {
     }
 
     @Test
+    public void testEvents2() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException {
+        String contractSrc ="pragma solidity ^0.4.24;\n" +
+                "contract ExampleEvent {\n" +
+                "\tuint256 public counter=3;\n" +
+                "\tevent Transfer(address indexed, address indexed, uint256);\n" +
+                "\tfunction mint(address[] _recipients, uint256[] _amounts) public {\n" +
+                "\t    for (uint8 i = 0; i < _recipients.length; i++) {\n" +
+                "            address recipient = _recipients[i];\n" +
+                "            uint256 amount = _amounts[i];\n" +
+                "            emit Transfer(0, recipient, amount);\n" +
+                "\t    }\n" +
+                "\t}\n" +
+                "}";
+        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        Contract contract = ret.get("ExampleEvent");
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract);
+
+        List<String> addresses = new ArrayList<>();
+        List<BigInteger> values = new ArrayList<>();
+
+        addresses.add("0x5000000000000000000000000000000000000005");
+        addresses.add("0x7000000000000000000000000000000000000007");
+
+        values.add(new BigInteger("10000"));
+        values.add(new BigInteger("20000"));
+
+        List<Event> events = testBlockchain.call(deployed, "mint", addresses, values);
+        Assert.assertEquals(2, events.size());
+        Assert.assertEquals(events.get(0).values().get(0).getValue().toString(), "0x0000000000000000000000000000000000000000");
+        Assert.assertEquals(events.get(0).values().get(1).getValue().toString(), "0x5000000000000000000000000000000000000005");
+        Assert.assertEquals(events.get(0).values().get(2).getValue().toString(), "10000");
+
+        Assert.assertEquals(events.get(1).values().get(0).getValue().toString(), "0x0000000000000000000000000000000000000000");
+        Assert.assertEquals(events.get(1).values().get(1).getValue().toString(), "0x7000000000000000000000000000000000000007");
+        Assert.assertEquals(events.get(1).values().get(2).getValue().toString(), "20000");
+    }
+
+    @Test
     public void testArrays() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
         String contractSrc = "contract Example2 {\n" +
                 "uint8 public result;\n" +
