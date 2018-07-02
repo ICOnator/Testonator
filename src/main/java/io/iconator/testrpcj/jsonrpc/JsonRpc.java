@@ -298,4 +298,7 @@ public interface JsonRpc {
 
     String[] ethj_listAvailableMethods();
 
+    String net_version();
+    boolean net_listening();
+
 }

@@ -47,12 +47,17 @@ public class AddContentTypeFilter implements Filter {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             HttpServletResponse httpResponse = (HttpServletResponse) response;
 
+            httpResponse.addHeader("Access-Control-Allow-Origin", "*");
+            httpResponse.addHeader("Access-Control-Allow-Methods", "POST");
+            httpResponse.addHeader("Access-Control-Allow-Headers", "Content-Type");
+
             if ("/rpc".equals(httpRequest.getRequestURI())) {
                 LOG.debug("Found " + httpRequest.getRequestURI());
                 AddParamsToHeader updatedRequest = new AddParamsToHeader((HttpServletRequest) request);
                 httpResponse.addHeader("content-type", "application/json");
                 httpResponse.addHeader("accept", "application/json");
                 chain.doFilter(updatedRequest, response);
+
             } else {
                 chain.doFilter(request, response);
             }

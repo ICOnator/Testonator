@@ -260,9 +260,33 @@ public class TestContracts {
         Map<String, String> contracts = new HashMap<>();
         contracts.put("./LibraryTest.sol", contractSrc2);
         Map<String, Contract> ret = TestBlockchain.compileInline(contractSrc1, contracts);
+        Contract contract = ret.get("LibImport");
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract, ret);
+        Object result = testBlockchain.callConstant(deployed, "testMe").get(0).getValue();
+        Assert.assertEquals(new BigInteger("42"), result);
+    }
+
+    @Test
+    public void testLibrary2() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        String contractSrc1 = "pragma solidity ^0.4.24;\n" +
+                "import \"./LibraryTest.sol\";\n" +
+                "contract LibImport {\n" +
+                "    function testMe() public view returns (uint256) {\n" +
+                "        return LibTest.test(0);\n" +
+                "    }\n" +
+                "}";
+        String contractSrc2 = "pragma solidity ^0.4.24;\n" +
+                "library LibTest {\n" +
+                "    function test(uint256 a) pure returns (uint256) {\n" +
+                "        return 42;\n" +
+                "    }\n" +
+                "}";
+        Map<String, String> contracts = new HashMap<>();
+        contracts.put("./LibraryTest.sol", contractSrc2);
+        Map<String, Contract> ret = TestBlockchain.compileInline(contractSrc1, contracts);
         Contract contract = ret.get("LibTest");
         DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract);
-        Object result = testBlockchain.callConstant(deployed, "test", 4L).get(0).getValue();
+        Object result = testBlockchain.callConstant(deployed, "testMe").get(0).getValue();
         Assert.assertEquals(new BigInteger("42"), result);
     }
 }

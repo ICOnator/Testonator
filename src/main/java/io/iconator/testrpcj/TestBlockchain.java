@@ -30,6 +30,7 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.utils.Files;
 import org.web3j.utils.Numeric;
 
 import javax.servlet.DispatcherType;
@@ -79,6 +80,7 @@ public class TestBlockchain {
     private StandaloneBlockchain standaloneBlockchain = null;
     private Web3j web3j;
     private ServletHolder holder;
+    private Map<String, DeployedContract> cacheDeploy = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         Integer port = null;
@@ -150,6 +152,16 @@ public class TestBlockchain {
         standaloneBlockchain.createBlock();
         EthJsonRpcImpl ethJsonRpcImpl = new EthJsonRpcImpl(standaloneBlockchain);
 
+        ethJsonRpcImpl.addAccount(CREDENTIAL_0.getAddress().substring(2), ACCOUNT_0);
+        ethJsonRpcImpl.addAccount(CREDENTIAL_1.getAddress().substring(2), ACCOUNT_1);
+        ethJsonRpcImpl.addAccount(CREDENTIAL_2.getAddress().substring(2), ACCOUNT_2);
+        ethJsonRpcImpl.addAccount(CREDENTIAL_3.getAddress().substring(2), ACCOUNT_3);
+        ethJsonRpcImpl.addAccount(CREDENTIAL_4.getAddress().substring(2), ACCOUNT_4);
+        ethJsonRpcImpl.addAccount(CREDENTIAL_5.getAddress().substring(2), ACCOUNT_5);
+        ethJsonRpcImpl.addAccount(CREDENTIAL_6.getAddress().substring(2), ACCOUNT_6);
+        ethJsonRpcImpl.addAccount(CREDENTIAL_7.getAddress().substring(2), ACCOUNT_7);
+        ethJsonRpcImpl.addAccount(CREDENTIAL_8.getAddress().substring(2), ACCOUNT_8);
+        ethJsonRpcImpl.addAccount(CREDENTIAL_9.getAddress().substring(2), ACCOUNT_9);
         JsonRpcServer rpcServer = new JsonRpcServer(new ObjectMapper(), ethJsonRpcImpl, JsonRpc.class);
         return new RPCServlet(rpcServer);
     }
@@ -159,6 +171,7 @@ public class TestBlockchain {
             RPCServlet rpcServlet = createBlockchainServlet();
             holder.setServlet(rpcServlet);
         }
+        cacheDeploy.clear();
     }
 
     public TestBlockchain stop() throws Exception {
@@ -166,6 +179,7 @@ public class TestBlockchain {
         server.destroy();
         server = null;
         standaloneBlockchain = null;
+        cacheDeploy.clear();
         return this;
     }
 
@@ -196,6 +210,9 @@ public class TestBlockchain {
     public List<Type> callConstant(DeployedContract contract, String name, Object... parameters)
             throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, ExecutionException, InterruptedException {
         Function function = createFunction(contract.contract(), name, parameters);
+        if(function == null) {
+            throw new RuntimeException("could not create/find function with name: "+name);
+        }
         return callConstant(contract.credential(), contract.contractAddress(), function);
     }
 
@@ -268,11 +285,59 @@ public class TestBlockchain {
         return events;
     }
 
-    public DeployedContract deploy(Credentials credential, Contract contract) throws IOException, ExecutionException, InterruptedException {
-        return deploy(credential, contract, BigInteger.ZERO);
+    public DeployedContract deploy(Credentials credential, Contract contract)
+            throws IOException, ExecutionException, InterruptedException {
+        return deploy(credential, contract, BigInteger.ZERO, Collections.emptyMap()).get(0);
     }
 
-    public DeployedContract deploy(Credentials credential, Contract contract, BigInteger value) throws IOException, ExecutionException, InterruptedException {
+    public DeployedContract deploy(Credentials credential, Contract contract, Map<String,Contract> dependencies)
+            throws IOException, ExecutionException, InterruptedException {
+        return deploy(credential, contract, BigInteger.ZERO, dependencies).get(0);
+    }
+
+    public List<DeployedContract> deploy(Credentials credential, Contract contract, BigInteger value,
+                                         Map<String,Contract> dependencies)
+            throws IOException, ExecutionException, InterruptedException {
+        return deploy(credential, contract, value, dependencies, new ArrayList<>());
+    }
+
+
+
+    public List<DeployedContract> deploy(Credentials credential, Contract contract, BigInteger value,
+                                         Map<String,Contract> dependencies, List<DeployedContract> retVal)
+            throws IOException, ExecutionException, InterruptedException {
+
+        if(contract.code().getCode().contains("__")) {
+            Pattern p = Pattern.compile("__<stdin>:([^_]*)[_]+");
+            Matcher m = p.matcher(contract.code().getCode());
+            int prevStart = 0;
+            StringBuilder sb = new StringBuilder();
+            while(m.find(prevStart)) {
+                String partOne = contract.code().getCode().substring(prevStart, m.start());
+                sb.append(partOne);
+                Contract dep = dependencies.get(m.group(1));
+                DeployedContract otherContract = cacheDeploy.get(m.group(1));
+                if(otherContract == null) {
+                    otherContract = deploy(
+                            credential, dep, BigInteger.ZERO, dependencies, retVal)
+                            .get(retVal.size() - 1);
+                    cacheDeploy.put(m.group(1), otherContract);
+                }
+                sb.append(otherContract.contractAddress().substring(2)); //we don't want 0x
+                prevStart = m.end();
+            }
+            sb.append(contract.code().getCode().substring(prevStart));
+            contract.code().setCode(sb.toString());
+            retVal.add(0, deploy(credential, contract, value));
+        } else {
+            retVal.add(0, deploy(credential, contract, value));
+        }
+        return retVal;
+    }
+
+    public DeployedContract deploy(Credentials credential, Contract contract, BigInteger value)
+            throws IOException, ExecutionException, InterruptedException {
+
         BigInteger nonce = nonce(credential);
         // create our transaction
         RawTransaction rawTransaction = RawTransaction.createContractTransaction(
@@ -285,9 +350,11 @@ public class TestBlockchain {
 
         EthSendTransaction tx = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(tx.getTransactionHash()).sendAsync().get();
-
+        LOG.info("Contract deployed at {}, {}", contractAddress, contract.code().getCode());
         return new DeployedContract(tx, contractAddress, credential, receipt, contract);
     }
+
+
 
     public static Map<String, Contract> compile(File source) throws IOException {
         SolidityCompiler.Result result = new SolidityCompiler(SystemProperties.getDefault()).compileSrc(
@@ -299,17 +366,30 @@ public class TestBlockchain {
         return compile(parsed);
     }
 
+    public static Map<String, Contract> compileInline(File... contracts) throws IOException {
+        if(contracts.length == 0) {
+            throw new RuntimeException("need files as input");
+        }
+        String contractSrc = Files.readString(contracts[0]);
+        Map<String, String> dependencies = new HashMap<>();
+        for(int i=1;i<contracts.length;i++) {
+            dependencies.put("./"+contracts[i].getName(), Files.readString(contracts[i]));
+        }
+        return compileInline(contractSrc, dependencies);
+    }
+
     public static Map<String, Contract> compileInline(String contractSrc, Map<String, String> dependencies) throws IOException {
         Pattern p = Pattern.compile("\\s*import\\s*\"([^\"]*)\"\\s*;");
         Matcher m = p.matcher(contractSrc);
-        int start = 0;
         StringBuilder sb = new StringBuilder();
-        while(m.find(start)) {
-            start = m.end();
-            sb.append(contractSrc.substring(0, m.start()));
+
+        int prevStart = 0;
+        while(m.find(prevStart)) {
+            sb.append(contractSrc.substring(prevStart, m.start()));
             sb.append(stripPragma(dependencies.get(m.group(1))));
-            sb.append(contractSrc.substring(m.end()));
+            prevStart = m.end();
         }
+        sb.append(contractSrc.substring(prevStart));
         return compile(sb.toString());
     }
 
@@ -409,7 +489,7 @@ public class TestBlockchain {
             Class c = AbiTypes.getType(type);
 
             if (type.startsWith("uint") || type.startsWith("int")) {
-                if (!(param instanceof Long) && !(param instanceof BigInteger)) {
+                if (!(param instanceof Long || param instanceof BigInteger)) {
                     throw new RuntimeException(
                             "expected Long or BigInteger for uint, but got "
                                     + param.getClass());
@@ -421,9 +501,7 @@ public class TestBlockchain {
                                     + param.getClass());
                 }
             } else if (type.startsWith("address")) {
-                if (!(param instanceof Uint160
-                        && !(param instanceof BigInteger)
-                        && !(param instanceof String))) {
+                if (!(param instanceof Uint160 || param instanceof BigInteger || param instanceof String)) {
                     throw new RuntimeException(
                             "expected Uint160, BigInteger, or String for address, but got "
                                     + param.getClass());

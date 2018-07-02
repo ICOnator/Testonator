@@ -35,9 +35,14 @@ public class RPCServlet extends HttpServlet {
     protected void service(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         try {
-            jsonRpcServer.handle(request, response);
+            if (request.getMethod().equals("OPTIONS")) {
+                response.setStatus(HttpServletResponse.SC_OK);
+            } else {
+                jsonRpcServer.handle(request, response);
+            }
             response.getOutputStream().flush();
         } catch (IOException ex) {
+            ex.printStackTrace();
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
         }
     }

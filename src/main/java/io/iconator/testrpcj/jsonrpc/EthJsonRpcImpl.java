@@ -1047,4 +1047,11 @@ public class EthJsonRpcImpl implements JsonRpc {
                 .sorted(String::compareTo)
                 .toArray(size -> new String[size]);
     }
+
+    public String net_version() {
+        return "1.0";
+    }
+    public boolean net_listening() {
+        return true;
+    }
 }
