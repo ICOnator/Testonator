@@ -515,6 +515,10 @@ public class EthJsonRpcImpl implements JsonRpc {
             executor.go();
             executor.finalization();
 
+            if(executor.getResult().getException() !=null) {
+                log.error("cannot execute constant call", executor.getResult().getException());
+            }
+
             return executor.getReceipt();
         } finally {
             repository.rollback();

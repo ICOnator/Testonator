@@ -9,6 +9,9 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.config.blockchain.ByzantiumConfig;
+import org.ethereum.config.blockchain.DaoHFConfig;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.CallTransaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.solidity.compiler.CompilationResult;
@@ -148,7 +151,14 @@ public class TestBlockchain {
                         EtherUtil.convert(10, EtherUtil.Unit.ETHER))
                 .withAccountBalance(TestBlockchain.ACCOUNT_9.getAddress(),
                         EtherUtil.convert(10, EtherUtil.Unit.ETHER))
-                .withAutoblock(true);  //after each transaction, a new block will be created
+                .withAutoblock(true) //after each transaction, a new block will be created
+                .withNetConfig(new ByzantiumConfig(new DaoHFConfig()){
+                    @Override
+                    public BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent) {
+                        //We don't want to mine
+                        return BigInteger.ONE;
+                    }
+                });
         standaloneBlockchain.createBlock();
         EthJsonRpcImpl ethJsonRpcImpl = new EthJsonRpcImpl(standaloneBlockchain);
 
@@ -290,6 +300,11 @@ public class TestBlockchain {
         return deploy(credential, contract, BigInteger.ZERO, Collections.emptyMap()).get(0);
     }
 
+    public DeployedContract deploy(Credentials credential, String contractName, Map<String,Contract> contracts)
+            throws InterruptedException, ExecutionException, IOException {
+        return deploy(credential, contracts.get(contractName), contracts);
+    }
+
     public DeployedContract deploy(Credentials credential, Contract contract, Map<String,Contract> dependencies)
             throws IOException, ExecutionException, InterruptedException {
         return deploy(credential, contract, BigInteger.ZERO, dependencies).get(0);
@@ -315,7 +330,8 @@ public class TestBlockchain {
             while(m.find(prevStart)) {
                 String partOne = contract.code().getCode().substring(prevStart, m.start());
                 sb.append(partOne);
-                Contract dep = dependencies.get(m.group(1));
+                String depName = m.group(1);
+                Contract dep = dependencies.get(depName);
                 DeployedContract otherContract = cacheDeploy.get(m.group(1));
                 if(otherContract == null) {
                     otherContract = deploy(

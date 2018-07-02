@@ -34,6 +34,7 @@ public class TestContracts {
 
     @BeforeClass
     public static void setup() throws Exception {
+        //System.setProperty("vm.structured.trace", "true");
         testBlockchain = TestBlockchain.start();
         web3j = Web3j.build(new HttpService("http://localhost:8545/rpc"));
         System.out.println("setup done: "+(System.currentTimeMillis()-start));
@@ -257,11 +258,11 @@ public class TestContracts {
                 "        return 42;\n" +
                 "    }\n" +
                 "}";
+
         Map<String, String> contracts = new HashMap<>();
         contracts.put("./LibraryTest.sol", contractSrc2);
-        Map<String, Contract> ret = TestBlockchain.compileInline(contractSrc1, contracts);
-        Contract contract = ret.get("LibImport");
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract, ret);
+        Map<String, Contract> compiledContracts = TestBlockchain.compileInline(contractSrc1, contracts);
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, "LibImport", compiledContracts);
         Object result = testBlockchain.callConstant(deployed, "testMe").get(0).getValue();
         Assert.assertEquals(new BigInteger("42"), result);
     }
@@ -283,9 +284,8 @@ public class TestContracts {
                 "}";
         Map<String, String> contracts = new HashMap<>();
         contracts.put("./LibraryTest.sol", contractSrc2);
-        Map<String, Contract> ret = TestBlockchain.compileInline(contractSrc1, contracts);
-        Contract contract = ret.get("LibTest");
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract);
+        Map<String, Contract> compiledContracts = TestBlockchain.compileInline(contractSrc1, contracts);
+        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, "LibImport", compiledContracts);
         Object result = testBlockchain.callConstant(deployed, "testMe").get(0).getValue();
         Assert.assertEquals(new BigInteger("42"), result);
     }
