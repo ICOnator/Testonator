@@ -361,7 +361,10 @@ public class TestBlockchain {
                 sb.append(partOne);
                 String depName = m.group(1);
                 Contract dep = dependencies.get(depName);
-                DeployedContract otherContract = cacheDeploy.get(m.group(1));
+                if(dep == null) {
+                    throw new RuntimeException("cannot find dependency: "+depName);
+                }
+                DeployedContract otherContract = cacheDeploy.get(depName);
                 if(otherContract == null) {
                     otherContract = deploy(
                             credential, dep, BigInteger.ZERO, dependencies, retVal)
