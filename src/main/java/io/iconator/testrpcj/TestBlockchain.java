@@ -76,6 +76,7 @@ public class TestBlockchain {
     public final static Credentials CREDENTIAL_9 = create(ACCOUNT_9);
 
     public final static Integer DEFAULT_PORT = 8545;
+    public final static String DEFAULT_PATH = "/";
     public static final BigInteger GAS_PRICE = BigInteger.valueOf(10_000_000_000L);
     public static final BigInteger GAS_LIMIT = BigInteger.valueOf(8_300_000);
 
@@ -86,30 +87,33 @@ public class TestBlockchain {
     private Map<String, DeployedContract> cacheDeploy = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
-        Integer port = null;
         TestBlockchain t = new TestBlockchain();
-        if (args.length > 0) {
-            try {
-                port = Integer.parseInt(args[0]);
-            } catch (NumberFormatException nfe) {
-                LOG.info("The given parameter can't be parsed as a number: {}", args[0]);
-                port = DEFAULT_PORT;
-            }
-        }
-        LOG.info("Using port: {}", port);
-        t.start(port);
+        t.start();
+        LOG.info("Server running.");
     }
 
-    public static TestBlockchain start() throws Exception {
+    public static TestBlockchain run() throws Exception {
+        return run(DEFAULT_PORT, DEFAULT_PATH);
+    }
+
+    public static TestBlockchain run(int port, String path) throws Exception {
         TestBlockchain t = new TestBlockchain();
-        return t.start(DEFAULT_PORT);
+        return t.start(port, path);
+    }
+
+    public TestBlockchain start() throws Exception {
+        return start(DEFAULT_PORT, DEFAULT_PATH);
     }
 
     public TestBlockchain start(int port) throws Exception {
-        return start(port, Web3j.build(new HttpService("http://localhost:8545/rpc")));
+        return start(port, DEFAULT_PATH);
     }
 
-    public TestBlockchain start(int port, Web3j web3j) throws Exception {
+    public TestBlockchain start(int port, String path) throws Exception {
+        return start(port, Web3j.build(new HttpService("http://localhost:8545"+path)), path);
+    }
+
+    public TestBlockchain start(int port, Web3j web3j, String path) throws Exception {
         if (server != null) {
             stop();
         }
@@ -122,8 +126,8 @@ public class TestBlockchain {
 
         RPCServlet rpcServlet = createBlockchainServlet();
         holder = new ServletHolder(rpcServlet);
-        context.addServlet(holder, "/rpc");
-        context.addFilter(AddContentTypeFilter.class, "/rpc", EnumSet.of(DispatcherType.REQUEST));
+        context.addServlet(holder, path);
+        context.addFilter(AddContentTypeFilter.class, path, EnumSet.of(DispatcherType.REQUEST));
         server.start();
 
         return this;

@@ -35,7 +35,7 @@ public class TestContracts {
     @BeforeClass
     public static void setup() throws Exception {
         //System.setProperty("vm.structured.trace", "true");
-        testBlockchain = TestBlockchain.start();
+        testBlockchain = TestBlockchain.run();
         web3j = Web3j.build(new HttpService("http://localhost:8545/rpc"));
         System.out.println("setup done: "+(System.currentTimeMillis()-start));
     }
