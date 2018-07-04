@@ -20,7 +20,12 @@ import org.web3j.protocol.http.HttpService;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
@@ -290,16 +295,22 @@ public class TestContracts {
                 "        return a.test();\n" +
                 "    }\n" +
                 "}";
+        Path dir = Files.createTempDirectory("testrpcj");
+        Path libImportFile = dir.resolve("LibImport.sol");
+        libImportFile.toFile().deleteOnExit();
+        Files.write(libImportFile, contractSrc1.getBytes());
+
         String contractSrc2 = "pragma solidity ^0.4.24;\n" +
                 "library LibTest {\n" +
                 "    function test(uint256 a) pure returns (uint256) {\n" +
                 "        return 42;\n" +
                 "    }\n" +
                 "}";
+        Path libTestFile = dir.resolve("LibraryTest.sol");
+        libTestFile.toFile().deleteOnExit();
+        Files.write(libTestFile, contractSrc2.getBytes());
 
-        Map<String, String> contracts = new HashMap<>();
-        contracts.put("./LibraryTest.sol", contractSrc2);
-        Map<String, Contract> compiledContracts = TestBlockchain.compileInline(contractSrc1, contracts);
+        Map<String, Contract> compiledContracts = TestBlockchain.compile(libImportFile.toFile(), libTestFile.toFile());
         DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, "LibImport", compiledContracts);
         Object result = testBlockchain.callConstant(deployed, "testMe").get(0).getValue();
         Assert.assertEquals(new BigInteger("42"), result);
@@ -314,15 +325,22 @@ public class TestContracts {
                 "        return LibTest.test(0);\n" +
                 "    }\n" +
                 "}";
+        Path dir = Files.createTempDirectory("testrpcj");
+        Path libImportFile = dir.resolve("LibImport.sol");
+        libImportFile.toFile().deleteOnExit();
+        Files.write(libImportFile, contractSrc1.getBytes());
+
         String contractSrc2 = "pragma solidity ^0.4.24;\n" +
                 "library LibTest {\n" +
                 "    function test(uint256 a) pure returns (uint256) {\n" +
                 "        return 42;\n" +
                 "    }\n" +
                 "}";
-        Map<String, String> contracts = new HashMap<>();
-        contracts.put("./LibraryTest.sol", contractSrc2);
-        Map<String, Contract> compiledContracts = TestBlockchain.compileInline(contractSrc1, contracts);
+        Path libTestFile = dir.resolve("LibraryTest.sol");
+        libTestFile.toFile().deleteOnExit();
+        Files.write(libTestFile, contractSrc2.getBytes());
+
+        Map<String, Contract> compiledContracts = TestBlockchain.compile(libImportFile.toFile(), libTestFile.toFile());
         DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, "LibImport", compiledContracts);
         Object result = testBlockchain.callConstant(deployed, "testMe").get(0).getValue();
         Assert.assertEquals(new BigInteger("42"), result);

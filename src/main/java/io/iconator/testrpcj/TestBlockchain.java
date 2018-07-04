@@ -356,7 +356,7 @@ public class TestBlockchain {
             throws IOException, ExecutionException, InterruptedException {
 
         if(contract.code().getCode().contains("__")) {
-            Pattern p = Pattern.compile("__<stdin>:([^_]*)[_]+");
+            Pattern p = Pattern.compile("__<[^>]*>:([^_]*)[_]*__");
             Matcher m = p.matcher(contract.code().getCode());
             int prevStart = 0;
             StringBuilder sb = new StringBuilder();
@@ -418,7 +418,7 @@ public class TestBlockchain {
         return compile(parsed);
     }
 
-    public static Map<String, Contract> compileInline(File... contracts) throws IOException {
+    public static Map<String, Contract> compile(File... contracts) throws IOException {
         if(contracts.length == 0) {
             throw new RuntimeException("need files as input");
         }
@@ -427,10 +427,10 @@ public class TestBlockchain {
         for(int i=1;i<contracts.length;i++) {
             dependencies.put("./"+contracts[i].getName(), Files.readString(contracts[i]));
         }
-        return compileInline(contractSrc, dependencies);
+        return compile(contractSrc, dependencies);
     }
 
-    public static Map<String, Contract> compileInline(String contractSrc, Map<String, String> dependencies) throws IOException {
+    public static Map<String, Contract> compile(String contractSrc, Map<String, String> dependencies) throws IOException {
         Pattern p = Pattern.compile("\\s*import\\s*\"([^\"]*)\"\\s*;");
         Matcher m = p.matcher(contractSrc);
         StringBuilder sb = new StringBuilder();
