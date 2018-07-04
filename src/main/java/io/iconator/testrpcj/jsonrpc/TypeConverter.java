@@ -53,11 +53,11 @@ public class TypeConverter {
     }
 
     public static String toJsonHex(byte[] x) {
-        return "0x"+Hex.toHexString(x);
+        return toJsonHex(Hex.toHexString(x));
     }
 
     public static String toJsonHex(String x) {
-        return "0x"+x;
+        return x.isEmpty() ? "0x0" : "0x"+x;
     }
 
     public static String toJsonHex(long n) {
