@@ -52,19 +52,24 @@ public class TypeConverter {
         return x;
     }
 
+    public static String toJsonHexNumber(byte[] x) {
+        String hex = Hex.toHexString(x);
+        return toJsonHex(hex.isEmpty() ? "0" : hex);
+    }
+
     public static String toJsonHex(byte[] x) {
-        return toJsonHex(Hex.toHexString(x));
+        return "0x" + Hex.toHexString(x);
     }
 
     public static String toJsonHex(String x) {
-        return x.isEmpty() ? "0x0" : "0x"+x;
+        return "0x" + x;
     }
 
     public static String toJsonHex(long n) {
-        return "0x"+ Long.toHexString(n);
+        return "0x" + Long.toHexString(n);
     }
 
     public static String toJsonHex(BigInteger n) {
-        return "0x"+ n.toString(16);
+        return "0x" + n.toString(16);
     }
 }
