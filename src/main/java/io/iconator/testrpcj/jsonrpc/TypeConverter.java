@@ -52,6 +52,10 @@ public class TypeConverter {
         return x;
     }
 
+    public static String toJsonHexAddress(byte[] x) {
+        return x == null || x.length ==0 ? null : "0x" + Hex.toHexString(x);
+    }
+
     public static String toJsonHexNumber(byte[] x) {
         String hex = Hex.toHexString(x);
         return toJsonHex(hex.isEmpty() ? "0" : hex);

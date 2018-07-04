@@ -205,7 +205,7 @@ public interface JsonRpc {
             blockHash = b == null ? null : TypeConverter.toJsonHex(b.getHash());
             transactionIndex = b == null ? null : TypeConverter.toJsonHex(txIndex);
             transactionHash = TypeConverter.toJsonHex(tx.getHash());
-            address = tx.getReceiveAddress() == null ? null : TypeConverter.toJsonHex(tx.getReceiveAddress());
+            address =  TypeConverter.toJsonHexAddress(tx.getReceiveAddress());
             data = TypeConverter.toJsonHex(logInfo.getData());
             topics = new String[logInfo.getTopics().size()];
             for (int i = 0; i < topics.length; i++) {
