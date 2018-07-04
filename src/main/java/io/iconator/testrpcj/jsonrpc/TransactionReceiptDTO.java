@@ -35,6 +35,7 @@ public class TransactionReceiptDTO {
     public String cumulativeGasUsed;        // The total amount of gas used when this transaction was executed in the block.
     public String gasUsed;                  // The amount of gas used by this specific transaction alone.
     public String contractAddress;          // The contract address created, if the transaction was a contract creation, otherwise  null .
+    public String status;
 //    public String from;
 //    public String to;
     public JsonRpc.LogFilterElement[] logs;         // Array of log objects, which this transaction generated.
@@ -64,6 +65,11 @@ public class TransactionReceiptDTO {
             logs[i] = new JsonRpc.LogFilterElement(logInfo, block, txInfo.getIndex(),
                     txInfo.getReceipt().getTransaction(), i);
         }
+        if(receipt.getError().isEmpty()) {
+            status = "0x1";
+        } else {
+            status = "0x0";
+        }
     }
 
     public String getTransactionHash() {
@@ -92,6 +98,10 @@ public class TransactionReceiptDTO {
 
     public String getContractAddress() {
         return this.contractAddress;
+    }
+
+    public String status() {
+        return this.status;
     }
 
     public JsonRpc.LogFilterElement[] getLogs() {
