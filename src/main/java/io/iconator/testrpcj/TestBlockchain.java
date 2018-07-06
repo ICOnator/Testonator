@@ -482,19 +482,19 @@ public class TestBlockchain {
         for (CallTransaction.Function f : contract.functions()) {
             if (f != null && f.name.equals(name)) {
                 if (f.inputs.length != input.length) {
-                    throw new RuntimeException(
-                            "contract input argument length: "
-                                    + f.inputs.length
-                                    + " does not match user input length: "
-                                    + input.length
-                                    + ". Function: "+f);
+                    continue;
                 }
                 List<Type> inputParameters = new ArrayList<>();
                 int len = f.inputs.length;
                 for (int i = 0; i < len; i++) {
                     CallTransaction.Param p = f.inputs[i];
-                    Type<?> t = convertTypes(p.getType(), input[i]);
-                    inputParameters.add(t);
+                    try {
+                        Type<?> t = convertTypes(p.getType(), input[i]);
+                        inputParameters.add(t);
+                    } catch (ConvertException ce) {
+                        //wrong type, try next
+                        continue;
+                    }
                 }
 
                 List<TypeReference<?>> outputParameters = new ArrayList<>();
@@ -537,11 +537,11 @@ public class TestBlockchain {
 
 
     private static Type<?> convertTypes(String type, Object param)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ConvertException {
 
         if(type.contains("[]")) {
             if(!(param instanceof List)) {
-                throw new RuntimeException(
+                throw new ConvertException(
                         "expected List for an array type got "
                                 + param.getClass());
             }
@@ -556,36 +556,36 @@ public class TestBlockchain {
 
             if (type.startsWith("uint") || type.startsWith("int")) {
                 if (!(param instanceof Long || param instanceof BigInteger)) {
-                    throw new RuntimeException(
+                    throw new ConvertException(
                             "expected Long or BigInteger for uint, but got "
                                     + param.getClass());
                 }
             } else if (type.startsWith("bytes")) {
                 if (!(param instanceof byte[])) {
-                    throw new RuntimeException(
+                    throw new ConvertException(
                             "expected byte[] for bytes*, but got "
                                     + param.getClass());
                 }
             } else if (type.startsWith("address")) {
                 if (!(param instanceof Uint160 || param instanceof BigInteger || param instanceof String)) {
-                    throw new RuntimeException(
+                    throw new ConvertException(
                             "expected Uint160, BigInteger, or String for address, but got "
                                     + param.getClass());
                 }
             } else if (type.startsWith("bool")) {
                 if (!(param instanceof Boolean)) {
-                    throw new RuntimeException(
+                    throw new ConvertException(
                             "expected Boolean for bool, but got "
                                     + param.getClass());
                 }
             } else if (type.startsWith("string")) {
                 if (!(param instanceof String)) {
-                    throw new RuntimeException(
+                    throw new ConvertException(
                             "expected String for string, but got "
                                     + param.getClass());
                 }
             } else {
-                throw new RuntimeException(
+                throw new ConvertException(
                         "expected something known, this is unkown "
                                 + type);
             }
