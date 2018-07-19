@@ -22,7 +22,7 @@ task sourceJar(type: Jar) {
 
 group 'io.iconator'
 archivesBaseName = 'testrpcj'
-version '1.0.19'
+version '1.0.20'
 
 jar.enabled = true
 

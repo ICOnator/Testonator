@@ -227,7 +227,7 @@ public class TestBlockchain {
         if(function == null) {
             throw new RuntimeException("could not create/find function with name: "+name);
         }
-        return callConstant(contract.credential(), contract.contractAddress(), function);
+        return callConstant(contract.from() == null? contract.owner() : contract.from(), contract.contractAddress(), function);
     }
 
     public List<Type> callConstant(Credentials credential, String contractAddress, Function function)
@@ -248,7 +248,7 @@ public class TestBlockchain {
     public List<Event> call(DeployedContract contract, String name, Object... parameters)
             throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException {
 
-        return call(contract.credential(), contract, BigInteger.ZERO, name, parameters);
+        return call(contract.from() == null? contract.owner() : contract.from(), contract, BigInteger.ZERO, name, parameters);
     }
 
     public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue,

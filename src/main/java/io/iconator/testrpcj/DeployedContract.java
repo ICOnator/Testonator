@@ -8,18 +8,21 @@ import org.web3j.protocol.core.methods.response.EthSendTransaction;
 public class DeployedContract {
     final private EthSendTransaction tx;
     final private String contractAddress;
-    final private Credentials credential;
+    final private Credentials owner;
     final private EthGetTransactionReceipt receipt;
     final private Contract contract;
+
+    private Credentials from;
+
     public DeployedContract(
             EthSendTransaction tx,
             String contractAddress,
-            Credentials credential,
+            Credentials owner,
             EthGetTransactionReceipt receipt,
             Contract contract) {
         this.tx = tx;
         this.contractAddress = contractAddress;
-        this.credential = credential;
+        this.owner = owner;
         this.receipt = receipt;
         this.contract = contract;
     }
@@ -31,8 +34,8 @@ public class DeployedContract {
         return contractAddress;
     }
 
-    public Credentials credential() {
-        return credential;
+    public Credentials owner() {
+        return owner;
     }
 
     public EthGetTransactionReceipt receipt() {
@@ -41,5 +44,12 @@ public class DeployedContract {
 
     public Contract contract() {
         return contract;
+    }
+
+    public Credentials from() {
+        return from;
+    }
+    public DeployedContract from(Credentials from) {
+        this.from = from; return this;
     }
 }
