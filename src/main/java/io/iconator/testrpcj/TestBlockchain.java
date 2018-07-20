@@ -559,7 +559,7 @@ public class TestBlockchain {
             Class c = AbiTypes.getType(type);
 
             if (type.startsWith("uint") || type.startsWith("int")) {
-                if (!(param instanceof Long || param instanceof BigInteger)) {
+                if (!(param instanceof Integer || param instanceof Long || param instanceof BigInteger)) {
                     throw new ConvertException(
                             "expected Long or BigInteger for uint, but got "
                                     + param.getClass());
