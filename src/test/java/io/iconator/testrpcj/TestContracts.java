@@ -30,6 +30,8 @@ import java.util.concurrent.ExecutionException;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
 import static org.ethereum.solidity.compiler.SolidityCompiler.Result;
+import static io.iconator.testrpcj.TestBlockchain.*;
+
 public class TestContracts {
 
     private static TestBlockchain testBlockchain;
@@ -40,7 +42,7 @@ public class TestContracts {
     @BeforeClass
     public static void setup() throws Exception {
         //System.setProperty("vm.structured.trace", "true");
-        testBlockchain = TestBlockchain.run();
+        testBlockchain = run();
         web3j = Web3j.build(new HttpService("http://localhost:8545/rpc"));
         System.out.println("setup done: "+(System.currentTimeMillis()-start));
     }
@@ -108,7 +110,7 @@ public class TestContracts {
                 "contract Example3 {\n" +
                 "    uint32 test;\n" +
                 "}";
-        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        Map<String, Contract> ret = compile(contractSrc);
         Assert.assertEquals(2, ret.size());
     }
 
@@ -127,17 +129,17 @@ public class TestContracts {
                 "\t    return counter;\n" +
                 "\t}\n" +
                 "}";
-        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        Map<String, Contract> ret = compile(contractSrc);
 
         EthCompileSolidity.Code c = ret.get("Exampl2").code();
 
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, ret.get("Exampl2"));
+        DeployedContract deployed = testBlockchain.deploy(CREDENTIAL_0, ret.get("Exampl2"));
 
         final Function function = new Function("counter",
                 Arrays.<Type>asList(),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
 
-        Type t = testBlockchain.callConstant( TestBlockchain.CREDENTIAL_0, deployed.contractAddress(), function).get(0);
+        Type t = testBlockchain.callConstant( CREDENTIAL_0, deployed.contractAddress(), function).get(0);
 
         Assert.assertEquals("12", t.getValue().toString());
 
@@ -147,11 +149,11 @@ public class TestContracts {
 
 
         List<Event> events = testBlockchain.call(
-                TestBlockchain.CREDENTIAL_0, deployed, BigInteger.ZERO, function2);
+                CREDENTIAL_0, deployed, BigInteger.ZERO, function2);
         System.out.println(events);
 
         String value = testBlockchain.callConstant(
-                TestBlockchain.CREDENTIAL_0, deployed.contractAddress(), function).get(0).getValue().toString();
+                CREDENTIAL_0, deployed.contractAddress(), function).get(0).getValue().toString();
         Assert.assertEquals(value, "13");
 
     }
@@ -171,18 +173,18 @@ public class TestContracts {
                 "\t    return counter;\n" +
                 "\t}\n" +
                 "}";
-        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
-        BigInteger balance = testBlockchain.balance(TestBlockchain.CREDENTIAL_0);
+        Map<String, Contract> ret = compile(contractSrc);
+        BigInteger balance = testBlockchain.balance(CREDENTIAL_0);
         System.out.println("balance1: "+balance);
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, ret.get("Exampl2"));
+        DeployedContract deployed = testBlockchain.deploy(CREDENTIAL_0, ret.get("Exampl2"));
         testBlockchain.call(deployed, "set", Long.valueOf(5));
-        BigInteger balance2 = testBlockchain.balance(TestBlockchain.CREDENTIAL_0);
+        BigInteger balance2 = testBlockchain.balance(CREDENTIAL_0);
         Assert.assertNotEquals(balance, balance2);
         System.out.println("balance2: "+balance2);
 
         String value = testBlockchain.callConstant(deployed, "get").get(0).getValue().toString();
         Assert.assertEquals(value, "5");
-        Assert.assertEquals(balance2, testBlockchain.balance(TestBlockchain.CREDENTIAL_0));
+        Assert.assertEquals(balance2, testBlockchain.balance(CREDENTIAL_0));
     }
 
     @Test
@@ -204,11 +206,11 @@ public class TestContracts {
                 "\t    return counter;\n" +
                 "\t}\n" +
                 "}\n";
-        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        Map<String, Contract> ret = compile(contractSrc);
         System.out.println("compile done: "+(System.currentTimeMillis()-start));
         start = System.currentTimeMillis();
         Contract contract = ret.get("ExampleEvent");
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract);
+        DeployedContract deployed = testBlockchain.deploy(CREDENTIAL_0, contract);
         System.out.println("deploy done: "+(System.currentTimeMillis()-start));
         start = System.currentTimeMillis();
         List<Event> events = testBlockchain.call(deployed, "set", Long.valueOf(5));
@@ -236,9 +238,9 @@ public class TestContracts {
                 "\t    }\n" +
                 "\t}\n" +
                 "}";
-        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        Map<String, Contract> ret = compile(contractSrc);
         Contract contract = ret.get("ExampleEvent");
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract);
+        DeployedContract deployed = testBlockchain.deploy(CREDENTIAL_0, contract);
 
         List<String> addresses = new ArrayList<>();
         List<BigInteger> values = new ArrayList<>();
@@ -270,9 +272,9 @@ public class TestContracts {
                 "        }\n" +
                 "    }\n" +
                 "}";
-        Map<String, Contract> ret = TestBlockchain.compile(contractSrc);
+        Map<String, Contract> ret = compile(contractSrc);
         Contract contract = ret.get("Example2");
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, contract);
+        DeployedContract deployed = testBlockchain.deploy(CREDENTIAL_0, contract);
 
         List<Long> list = new ArrayList<>();
         list.add(10L);
@@ -310,8 +312,8 @@ public class TestContracts {
         libTestFile.toFile().deleteOnExit();
         Files.write(libTestFile, contractSrc2.getBytes());
 
-        Map<String, Contract> compiledContracts = TestBlockchain.compile(libImportFile.toFile(), libTestFile.toFile());
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, "LibImport", compiledContracts);
+        Map<String, Contract> compiledContracts = compile(libImportFile.toFile(), libTestFile.toFile());
+        DeployedContract deployed = testBlockchain.deploy(CREDENTIAL_0, "LibImport", compiledContracts);
         Object result = testBlockchain.callConstant(deployed, "testMe").get(0).getValue();
         Assert.assertEquals(new BigInteger("42"), result);
     }
@@ -340,8 +342,8 @@ public class TestContracts {
         libTestFile.toFile().deleteOnExit();
         Files.write(libTestFile, contractSrc2.getBytes());
 
-        Map<String, Contract> compiledContracts = TestBlockchain.compile(libImportFile.toFile(), libTestFile.toFile());
-        DeployedContract deployed = testBlockchain.deploy(TestBlockchain.CREDENTIAL_0, "LibImport", compiledContracts);
+        Map<String, Contract> compiledContracts = compile(libImportFile.toFile(), libTestFile.toFile());
+        DeployedContract deployed = testBlockchain.deploy(CREDENTIAL_0, "LibImport", compiledContracts);
         Object result = testBlockchain.callConstant(deployed, "testMe").get(0).getValue();
         Assert.assertEquals(new BigInteger("42"), result);
     }
