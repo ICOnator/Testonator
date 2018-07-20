@@ -593,7 +593,9 @@ public class TestBlockchain {
                         "expected something known, this is unkown "
                                 + type);
             }
-            if (param instanceof Long) {
+            if (param instanceof Integer) {
+                return (Type<?>) c.getDeclaredConstructor(long.class).newInstance(((Integer) param).longValue());
+            } else if (param instanceof Long) {
                 return (Type<?>) c.getDeclaredConstructor(long.class).newInstance(((Long) param).longValue());
             } else if (param instanceof Boolean) {
                 return (Type<?>) c.getDeclaredConstructor(boolean.class).newInstance(((Boolean) param).booleanValue());
