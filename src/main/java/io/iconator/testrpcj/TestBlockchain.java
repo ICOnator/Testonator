@@ -281,6 +281,10 @@ public class TestBlockchain {
 
         EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(ret.getTransactionHash()).sendAsync().get();
 
+        if(!receipt.getResult().isStatusOK()) {
+            LOG.warn("Function [{}] failed", function.getName());
+        }
+
         List<Event> events = new ArrayList<>();
         //get logs and return them
         for(Log log:receipt.getResult().getLogs()) {
