@@ -1,6 +1,6 @@
 ![Travis](https://img.shields.io/travis/ICOnator/testrpcj.svg) ![Maven metadata URI](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/io/iconator/testrpcj/maven-metadata.xml.svg)
 
-# testrpcj
+# Testonator
 
 This library provides a JSON-RPC wrapper to a standalone Ethereum blockchain, used for testing purposes.
 
@@ -12,14 +12,14 @@ Maven:
 <dependency>
     <groupId>io.iconator</groupId>
     <artifactId>testrpcj</artifactId>
-    <version>1.0.13</version>
+    <version>1.0.20</version>
 </dependency>
 ```
 
 Gradle:
 
 ```
-compile 'io.iconator:testrpcj:1.0.13'
+compile 'io.iconator:testrpcj:1.0.20'
 ```
 
 ## Example of JSON-RPC request
