@@ -1,10 +1,10 @@
-package io.iconator.testrpcj;
+package io.iconator.testonator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.jsonrpc4j.JsonRpcServer;
-import io.iconator.testrpcj.jsonrpc.AddContentTypeFilter;
-import io.iconator.testrpcj.jsonrpc.EthJsonRpcImpl;
-import io.iconator.testrpcj.jsonrpc.JsonRpc;
+import io.iconator.testonator.jsonrpc.AddContentTypeFilter;
+import io.iconator.testonator.jsonrpc.EthJsonRpcImpl;
+import io.iconator.testonator.jsonrpc.JsonRpc;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;

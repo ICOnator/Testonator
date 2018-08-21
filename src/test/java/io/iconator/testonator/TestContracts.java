@@ -1,4 +1,4 @@
-package io.iconator.testrpcj;
+package io.iconator.testonator;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.CallTransaction;
@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.ethereum.solidity.compiler.SolidityCompiler.Options.*;
 import static org.ethereum.solidity.compiler.SolidityCompiler.Result;
-import static io.iconator.testrpcj.TestBlockchain.*;
+import static io.iconator.testonator.TestBlockchain.*;
 
 public class TestContracts {
 
@@ -297,7 +297,7 @@ public class TestContracts {
                 "        return a.test();\n" +
                 "    }\n" +
                 "}";
-        Path dir = Files.createTempDirectory("testrpcj");
+        Path dir = Files.createTempDirectory("testonator");
         Path libImportFile = dir.resolve("LibImport.sol");
         libImportFile.toFile().deleteOnExit();
         Files.write(libImportFile, contractSrc1.getBytes());
@@ -327,7 +327,7 @@ public class TestContracts {
                 "        return LibTest.test(0);\n" +
                 "    }\n" +
                 "}";
-        Path dir = Files.createTempDirectory("testrpcj");
+        Path dir = Files.createTempDirectory("testonator");
         Path libImportFile = dir.resolve("LibImport.sol");
         libImportFile.toFile().deleteOnExit();
         Files.write(libImportFile, contractSrc1.getBytes());

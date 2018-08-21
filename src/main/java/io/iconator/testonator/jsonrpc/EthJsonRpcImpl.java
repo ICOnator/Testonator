@@ -16,7 +16,7 @@
  * along with Ethereum Harmony.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.iconator.testrpcj.jsonrpc;
+package io.iconator.testonator.jsonrpc;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;

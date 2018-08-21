@@ -16,7 +16,7 @@
  * along with Ethereum Harmony.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.iconator.testrpcj.jsonrpc;
+package io.iconator.testonator.jsonrpc;
 
 import com.googlecode.jsonrpc4j.JsonRpcService;
 import org.ethereum.core.Block;

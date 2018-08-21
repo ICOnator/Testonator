@@ -16,22 +16,25 @@
  * along with Ethereum Harmony.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.iconator.testrpcj.jsonrpc;
+package io.iconator.testonator.jsonrpc;
 
-import org.ethereum.core.Transaction;
+import org.ethereum.core.Block;
+import org.ethereum.core.TransactionInfo;
+
+import static io.iconator.testonator.jsonrpc.TypeConverter.toJsonHex;
+
 
 /**
- * Transaction for making constant calls without changing network state.
- *
- * Created by Stan Reshetnyk on 22.12.16.
+ * Created by Anton Nashatyrev on 05.08.2016.
  */
-public class LocalTransaction extends Transaction {
+public class TransactionReceiptDTOExt extends TransactionReceiptDTO {
 
-    public LocalTransaction(byte[] rawData) {
-        super(rawData);
-    }
+    public String returnData;
+    public String error;
 
-    public void setSender(byte[] sendAddress) {
-        this.sendAddress = sendAddress;
+    public TransactionReceiptDTOExt(Block block, TransactionInfo txInfo) {
+        super(block, txInfo);
+        returnData = toJsonHex(txInfo.getReceipt().getExecutionResult());
+        error = txInfo.getReceipt().getError();
     }
 }

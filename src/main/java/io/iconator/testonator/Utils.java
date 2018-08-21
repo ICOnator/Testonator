@@ -1,4 +1,4 @@
-package io.iconator.testrpcj;
+package io.iconator.testonator;
 
 import org.ethereum.core.CallTransaction;
 import org.web3j.abi.TypeReference;

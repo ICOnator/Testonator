@@ -1,4 +1,4 @@
-package io.iconator.testrpcj;
+package io.iconator.testonator;
 
 /*
  * Copyright 2002-2017 the original author or authors.

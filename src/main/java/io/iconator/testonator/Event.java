@@ -1,4 +1,4 @@
-package io.iconator.testrpcj;
+package io.iconator.testonator;
 
 import org.web3j.abi.datatypes.Type;
 

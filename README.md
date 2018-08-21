@@ -1,4 +1,4 @@
-![Travis](https://img.shields.io/travis/ICOnator/testrpcj.svg) ![Maven metadata URI](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/io/iconator/testrpcj/maven-metadata.xml.svg)
+![Travis](https://img.shields.io/travis/ICOnator/Testonator.svg) ![Maven metadata URI](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/io/iconator/testonator/maven-metadata.xml.svg)
 
 # Testonator
 
@@ -12,14 +12,14 @@ Maven:
 <dependency>
     <groupId>io.iconator</groupId>
     <artifactId>testrpcj</artifactId>
-    <version>1.0.20</version>
+    <version>1.0.22</version>
 </dependency>
 ```
 
 Gradle:
 
 ```
-compile 'io.iconator:testrpcj:1.0.20'
+compile 'io.iconator:testonator:1.0.22'
 ```
 
 ## Example of JSON-RPC request

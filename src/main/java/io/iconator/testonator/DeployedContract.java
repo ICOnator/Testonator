@@ -1,6 +1,5 @@
-package io.iconator.testrpcj;
+package io.iconator.testonator;
 
-import org.ethereum.crypto.ECKey;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
