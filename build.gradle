@@ -24,6 +24,9 @@ group 'io.iconator'
 archivesBaseName = 'testrpcj'
 version '1.0.21'
 
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 jar.enabled = true
 
 repositories {

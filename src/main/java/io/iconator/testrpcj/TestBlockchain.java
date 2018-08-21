@@ -22,11 +22,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.DynamicArray;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.generated.AbiTypes;
-import org.web3j.abi.datatypes.generated.Uint160;
+import org.web3j.abi.datatypes.*;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -223,7 +219,7 @@ public class TestBlockchain {
 
     public List<Type> callConstant(DeployedContract contract, String name, Object... parameters)
             throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, ExecutionException, InterruptedException {
-        Function function = createFunction(contract.contract(), name, parameters);
+        Function function = Utils.createFunction(contract.contract(), name, parameters);
         if(function == null) {
             throw new RuntimeException("could not create/find function with name: "+name);
         }
@@ -251,11 +247,19 @@ public class TestBlockchain {
         return call(contract.from() == null? contract.owner() : contract.from(), contract, BigInteger.ZERO, name, parameters);
     }
 
+    public List<Event> call(Credentials credential, DeployedContract contract,
+                            String name, Object... parameters)
+            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException {
+
+        Function function =  Utils.createFunction(contract.contract(), name, parameters);
+        return call(credential, contract, BigInteger.ZERO, function);
+    }
+
     public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue,
                            String name, Object... parameters)
             throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException {
 
-        Function function =  createFunction(contract.contract(), name, parameters);
+        Function function =  Utils.createFunction(contract.contract(), name, parameters);
         return call(credential, contract, weiValue, function);
     }
 
@@ -285,46 +289,53 @@ public class TestBlockchain {
             LOG.warn("Function [{}] failed", function.getName());
         }
 
+        List<Contract> contracts = new ArrayList<>();
+        contracts.add(contract.contract());
+        for(Contract c:contract.referencedContracts()) {
+            contracts.add(c);
+        }
+
         List<Event> events = new ArrayList<>();
         //get logs and return them
         for(Log log:receipt.getResult().getLogs()) {
             //search topic
+            for(Contract c:contracts) {
+                for (CallTransaction.Function f : c.functions()) {
+                    for (String topic : log.getTopics()) {
+                        if (Hash.sha3String(f.formatSignature()).equals(topic)) {
+                            //match! now we now the parameters
 
-            for(String topic:log.getTopics()) {
-                for(CallTransaction.Function f:contract.contract().functions()) {
-                    if(Hash.sha3String(f.formatSignature()).equals(topic)) {
-                        //match! now we now the parameters
-
-                        //first indexed parameters
-                        StringBuilder sb = new StringBuilder("0x");
-                        for(String topic2:log.getTopics()) {
-                            if(!topic.equals(topic2)) {
-                                sb.append(topic2.substring(2));
+                            //first indexed parameters
+                            StringBuilder sb = new StringBuilder("0x");
+                            for (String topic2 : log.getTopics()) {
+                                if (!topic.equals(topic2)) {
+                                    sb.append(topic2.substring(2));
+                                }
                             }
-                        }
-                        Map<Integer, TypeReference<Type>> outputIndexed = createEventIndexed(f, true);
-                        List<TypeReference<Type>> tmp = new ArrayList<>(outputIndexed.values());
-                        List<Type> valuesIndexed = FunctionReturnDecoder.decode(sb.toString(), tmp);
+                            Map<Integer, TypeReference<Type>> outputIndexed = Utils.createEventIndexed(f, true);
+                            List<TypeReference<Type>> tmp = new ArrayList<>(outputIndexed.values());
+                            List<Type> valuesIndexed = FunctionReturnDecoder.decode(sb.toString(), tmp);
 
-                        //then non-indexed parameters
-                        Map<Integer, TypeReference<Type>> outputNonIndexed = createEventIndexed(f, false);
-                        tmp = new ArrayList<>(outputNonIndexed.values());
-                        List<Type> valuesNonIndexed = FunctionReturnDecoder.decode(log.getData(), tmp);
+                            //then non-indexed parameters
+                            Map<Integer, TypeReference<Type>> outputNonIndexed = Utils.createEventIndexed(f, false);
+                            tmp = new ArrayList<>(outputNonIndexed.values());
+                            List<Type> valuesNonIndexed = FunctionReturnDecoder.decode(log.getData(), tmp);
 
-                        //merge everything in the right order
-                        List<Type> values = new ArrayList<>();
-                        int len = valuesIndexed.size()+valuesNonIndexed.size();
-                        for(int i=0;i<len;i++) {
-                            if(outputIndexed.containsKey(i)) {
-                                values.add(valuesIndexed.remove(0));
-                            } else if(outputNonIndexed.containsKey(i)) {
-                                values.add(valuesNonIndexed.remove(0));
-                            } else {
-                                throw new RuntimeException("cannot happen");
+                            //merge everything in the right order
+                            List<Type> values = new ArrayList<>();
+                            int len = valuesIndexed.size() + valuesNonIndexed.size();
+                            for (int i = 0; i < len; i++) {
+                                if (outputIndexed.containsKey(i)) {
+                                    values.add(valuesIndexed.remove(0));
+                                } else if (outputNonIndexed.containsKey(i)) {
+                                    values.add(valuesNonIndexed.remove(0));
+                                } else {
+                                    throw new RuntimeException("cannot happen");
+                                }
                             }
-                        }
 
-                        events.add(new Event(values, f.name, f.formatSignature(), topic));
+                            events.add(new Event(c, values, f.name, f.formatSignature(), topic));
+                        }
                     }
                 }
             }
@@ -342,21 +353,21 @@ public class TestBlockchain {
         return deploy(credential, contracts.get(contractName), contracts);
     }
 
-    public DeployedContract deploy(Credentials credential, Contract contract, Map<String,Contract> dependencies)
+    public DeployedContract deploy(Credentials credential, Contract contract, Map<String,Contract> contracts)
             throws IOException, ExecutionException, InterruptedException {
-        return deploy(credential, contract, BigInteger.ZERO, dependencies).get(0);
+        return deploy(credential, contract, BigInteger.ZERO, contracts).get(0);
     }
 
     public List<DeployedContract> deploy(Credentials credential, Contract contract, BigInteger value,
-                                         Map<String,Contract> dependencies)
+                                         Map<String,Contract> contracts)
             throws IOException, ExecutionException, InterruptedException {
-        return deploy(credential, contract, value, dependencies, new ArrayList<>());
+        return deploy(credential, contract, value, contracts, new ArrayList<>());
     }
 
 
 
     public List<DeployedContract> deploy(Credentials credential, Contract contract, BigInteger value,
-                                         Map<String,Contract> dependencies, List<DeployedContract> retVal)
+                                         Map<String,Contract> contracts, List<DeployedContract> retVal)
             throws IOException, ExecutionException, InterruptedException {
 
         if(contract.code().getCode().contains("__")) {
@@ -368,14 +379,14 @@ public class TestBlockchain {
                 String partOne = contract.code().getCode().substring(prevStart, m.start());
                 sb.append(partOne);
                 String depName = m.group(1);
-                Contract dep = dependencies.get(depName);
+                Contract dep = contracts.get(depName);
                 if(dep == null) {
                     throw new RuntimeException("cannot find dependency: "+depName);
                 }
                 DeployedContract otherContract = cacheDeploy.get(depName);
                 if(otherContract == null) {
                     otherContract = deploy(
-                            credential, dep, BigInteger.ZERO, dependencies, retVal)
+                            credential, dep, BigInteger.ZERO, contracts, retVal)
                             .get(retVal.size() - 1);
                     cacheDeploy.put(m.group(1), otherContract);
                 }
@@ -384,9 +395,9 @@ public class TestBlockchain {
             }
             sb.append(contract.code().getCode().substring(prevStart));
             contract.code().setCode(sb.toString());
-            retVal.add(0, deploy(credential, contract, value));
+            retVal.add(0, deploy(credential, contract, value).addAllReferencedContract(contracts.values()));
         } else {
-            retVal.add(0, deploy(credential, contract, value));
+            retVal.add(0, deploy(credential, contract, value).addAllReferencedContract(contracts.values()));
         }
         return retVal;
     }
@@ -480,128 +491,4 @@ public class TestBlockchain {
         return retVal;
     }
 
-    // ************************** Utils ***************************
-    private static Function createFunction(Contract contract, String name, Object... input)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        for (CallTransaction.Function f : contract.functions()) {
-            if (f != null && f.name.equals(name)) {
-                if (f.inputs.length != input.length) {
-                    continue;
-                }
-                List<Type> inputParameters = new ArrayList<>();
-                int len = f.inputs.length;
-                for (int i = 0; i < len; i++) {
-                    CallTransaction.Param p = f.inputs[i];
-                    try {
-                        Type<?> t = convertTypes(p.getType(), input[i]);
-                        inputParameters.add(t);
-                    } catch (ConvertException ce) {
-                        //wrong type, try next
-                        continue;
-                    }
-                }
-
-                List<TypeReference<?>> outputParameters = new ArrayList<>();
-                len = f.outputs.length;
-                for (int i = 0; i < len; i++) {
-                    CallTransaction.Param p = f.outputs[i];
-                    TypeReference<Type> t = TypeReference.<Type>create((Class<Type>) AbiTypes.getType(p.getType()));
-                    outputParameters.add(t);
-                }
-                return new Function(name, inputParameters, outputParameters);
-            }
-        }
-        return null;
-    }
-
-    private static Map<Integer, TypeReference<Type>> createEventIndexed(CallTransaction.Function f, boolean indexed) {
-        Map<Integer, TypeReference<Type>> outputParameters = new LinkedHashMap<>();
-        int len = f.inputs.length;
-        for (int i = 0; i < len; i++) {
-
-            CallTransaction.Param p = f.inputs[i];
-            if(!(p.indexed ^ indexed)) {
-                TypeReference<Type> t = TypeReference.<Type>create((Class<Type>) AbiTypes.getType(p.getType()));
-                outputParameters.put(i, t);
-            }
-        }
-        return outputParameters;
-    }
-
-    private static List<TypeReference<Type>> createEvent(CallTransaction.Function f) {
-        List<TypeReference<Type>> outputParameters = new ArrayList<>();
-        int len = f.inputs.length;
-        for (int i = 0; i < len; i++) {
-            CallTransaction.Param p = f.inputs[i];
-            TypeReference<Type> t = TypeReference.<Type>create((Class<Type>) AbiTypes.getType(p.getType()));
-            outputParameters.add(t);
-        }
-        return outputParameters;
-    }
-
-
-    private static Type<?> convertTypes(String type, Object param)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ConvertException {
-
-        if(type.contains("[]")) {
-            if(!(param instanceof List)) {
-                throw new ConvertException(
-                        "expected List for an array type got "
-                                + param.getClass());
-            }
-            List<Type<?>> retVal = new ArrayList<>();
-            for(Object o:((List)param)) {
-                Type<?> value = convertTypes(type.replace("[]",""), o);
-                retVal.add(value);
-            }
-            return new DynamicArray(retVal);
-        } else {
-            Class c = AbiTypes.getType(type);
-
-            if (type.startsWith("uint") || type.startsWith("int")) {
-                if (!(param instanceof Integer || param instanceof Long || param instanceof BigInteger)) {
-                    throw new ConvertException(
-                            "expected Long or BigInteger for uint, but got "
-                                    + param.getClass());
-                }
-            } else if (type.startsWith("bytes")) {
-                if (!(param instanceof byte[])) {
-                    throw new ConvertException(
-                            "expected byte[] for bytes*, but got "
-                                    + param.getClass());
-                }
-            } else if (type.startsWith("address")) {
-                if (!(param instanceof Uint160 || param instanceof BigInteger || param instanceof String)) {
-                    throw new ConvertException(
-                            "expected Uint160, BigInteger, or String for address, but got "
-                                    + param.getClass());
-                }
-            } else if (type.startsWith("bool")) {
-                if (!(param instanceof Boolean)) {
-                    throw new ConvertException(
-                            "expected Boolean for bool, but got "
-                                    + param.getClass());
-                }
-            } else if (type.startsWith("string")) {
-                if (!(param instanceof String)) {
-                    throw new ConvertException(
-                            "expected String for string, but got "
-                                    + param.getClass());
-                }
-            } else {
-                throw new ConvertException(
-                        "expected something known, this is unkown "
-                                + type);
-            }
-            if (param instanceof Integer) {
-                return (Type<?>) c.getDeclaredConstructor(long.class).newInstance(((Integer) param).longValue());
-            } else if (param instanceof Long) {
-                return (Type<?>) c.getDeclaredConstructor(long.class).newInstance(((Long) param).longValue());
-            } else if (param instanceof Boolean) {
-                return (Type<?>) c.getDeclaredConstructor(boolean.class).newInstance(((Boolean) param).booleanValue());
-            } else {
-                return (Type<?>) c.getDeclaredConstructor(param.getClass()).newInstance(param);
-            }
-        }
-    }
 }
