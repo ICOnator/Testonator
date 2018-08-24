@@ -66,17 +66,6 @@ public class Utils {
         return outputParameters;
     }
 
-    public static List<TypeReference<Type>> createEvent(CallTransaction.Function f) {
-        List<TypeReference<Type>> outputParameters = new ArrayList<>();
-        int len = f.inputs.length;
-        for (int i = 0; i < len; i++) {
-            CallTransaction.Param p = f.inputs[i];
-            TypeReference<Type> t = Utils.getType(p.getType());
-            outputParameters.add(t);
-        }
-        return outputParameters;
-    }
-
     public static Type<?> convertTypes(String type, Object param)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ConvertException {
 

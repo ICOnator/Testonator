@@ -306,15 +306,21 @@ public class TestBlockchain {
                             //match! now we now the parameters
 
                             //first indexed parameters
-                            StringBuilder sb = new StringBuilder("0x");
-                            for (String topic2 : log.getTopics()) {
-                                if (!topic.equals(topic2)) {
-                                    sb.append(topic2.substring(2));
-                                }
-                            }
                             Map<Integer, TypeReference<Type>> outputIndexed = Utils.createEventIndexed(f, true);
                             List<TypeReference<Type>> tmp = new ArrayList<>(outputIndexed.values());
-                            List<Type> valuesIndexed = FunctionReturnDecoder.decode(sb.toString(), tmp);
+                            List<Type> valuesIndexed = new ArrayList<>(tmp.size());
+                            //add 1 as first entry is the topic
+                            int logTopicSize = log.getTopics().size();
+                            if(logTopicSize != tmp.size() + 1) {
+                                throw new IOException("did not get the right number of logs back: "+logTopicSize + "/" + tmp.size());
+                            }
+                            if(!log.getTopics().get(0).equals(topic)) {
+                                throw new IOException("did not get the right topic: ["+log.getTopics().get(0)+ "]/["+ topic+"]");
+                            }
+
+                            for(int j = 1; j<logTopicSize; j++) {
+                                valuesIndexed.add(FunctionReturnDecoder.decodeIndexedValue(log.getTopics().get(j), tmp.get(j - 1)));
+                            }
 
                             //then non-indexed parameters
                             Map<Integer, TypeReference<Type>> outputNonIndexed = Utils.createEventIndexed(f, false);
