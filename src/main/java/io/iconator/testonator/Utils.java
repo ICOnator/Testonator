@@ -1,6 +1,8 @@
 package io.iconator.testonator;
 
 import org.ethereum.core.CallTransaction;
+import org.ethereum.crypto.cryptohash.Keccak256;
+import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.DynamicArray;
@@ -8,6 +10,8 @@ import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.AbiTypes;
 import org.web3j.abi.datatypes.generated.Uint160;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.utils.Numeric;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
@@ -154,5 +158,34 @@ public class Utils {
         } else {
             return TypeReference.create((Class<Type>) AbiTypes.getType(type));
         }
+    }
+
+    public static String encodeParameters(Type... objects) {
+        List<Type> params = new ArrayList<Type>(objects.length + 2);
+
+        //these are dummy values, so that the encoded offset is correct
+        params.add(new Address("0x0"));
+        params.add(new Uint256(0));
+
+        for(Type t:objects) {
+            params.add(t);
+        }
+        String encoded = FunctionEncoder.encodeConstructor(params);
+        return encoded.substring(128);
+    }
+
+    public static Type createArray(Type... types) {
+        List<Type> tmp = new ArrayList<Type>(types.length);
+        for(Type type:types) {
+            tmp.add(type);
+        }
+        return new DynamicArray(tmp);
+    }
+
+    public static String functionHash(String abiSig) {
+        byte[] hash = new Keccak256().digest(abiSig.getBytes());
+        byte[] name = new byte[4];
+        System.arraycopy(hash, 0, name, 0, 4);
+        return Numeric.toHexString(name);
     }
 }
