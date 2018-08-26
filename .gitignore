@@ -56,7 +56,6 @@ fabric.properties
 build/
 database/
 logs/
-testrpcj.iml
 gradle.properties
 **/gradle.properties
 .java-version
