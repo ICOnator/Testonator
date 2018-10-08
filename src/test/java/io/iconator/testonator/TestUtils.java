@@ -13,19 +13,21 @@ public class TestUtils {
     private static Map<String, Contract> contracts = null;
 
     public static Map<String, Contract> setup() throws Exception {
-        if(contracts != null) {
+        /*if(contracts != null) {
             return contracts;
         }
         File contractFile1 = Paths.get(ClassLoader.getSystemResource("SafeMath.sol").toURI()).toFile();
         File contractFile2 = Paths.get(ClassLoader.getSystemResource("Utils.sol").toURI()).toFile();
-        File contractFile3 = Paths.get(ClassLoader.getSystemResource("Eureka.sol").toURI()).toFile();
-        Map<String, Contract> contracts = compile(contractFile3, contractFile1, contractFile2);
+        File contractFile3 = Paths.get(ClassLoader.getSystemResource("DOS.sol").toURI()).toFile();
+        File contractFile4 = Paths.get(ClassLoader.getSystemResource("SafeMath192.sol").toURI()).toFile();
+        Map<String, Contract> contracts = compile(contractFile3, contractFile1, contractFile2, contractFile4);
         Assert.assertEquals(5, contracts.size());
         for(String name:contracts.keySet()) {
             System.out.println("Available contract names: " + name);
         }
         TestUtils.contracts = contracts;
-        return contracts;
+        return contracts;*/
+        return null;
     }
 
 

@@ -459,6 +459,7 @@ public class TestBlockchain {
         int prevStart = 0;
         while(m.find(prevStart)) {
             sb.append(contractSrc.substring(prevStart, m.start()));
+            System.out.println("AA"+m.group(1)+" de "+dependencies.keySet());
             sb.append(stripPragma(dependencies.get(m.group(1))));
             prevStart = m.end();
         }
