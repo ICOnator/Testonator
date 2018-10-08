@@ -11,7 +11,7 @@ Maven:
 ```
 <dependency>
     <groupId>io.iconator</groupId>
-    <artifactId>testrpcj</artifactId>
+    <artifactId>testonator</artifactId>
     <version>1.0.26</version>
 </dependency>
 ```
