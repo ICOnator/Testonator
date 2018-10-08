@@ -218,7 +218,7 @@ public class TestBlockchain {
     }
 
     public List<Type> callConstant(DeployedContract contract, String name, Object... parameters)
-            throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, ExecutionException, InterruptedException {
+            throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, ExecutionException, InterruptedException, ConvertException {
         Function function = Utils.createFunction(contract.contract(), name, parameters);
         if(function == null) {
             throw new RuntimeException("could not create/find function with name: "+name);
@@ -242,14 +242,14 @@ public class TestBlockchain {
     }
 
     public List<Event> call(DeployedContract contract, String name, Object... parameters)
-            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException {
+            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException, ConvertException {
 
         return call(contract.from() == null? contract.owner() : contract.from(), contract, BigInteger.ZERO, name, parameters);
     }
 
     public List<Event> call(Credentials credential, DeployedContract contract,
                             String name, Object... parameters)
-            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException {
+            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException, ConvertException {
 
         Function function =  Utils.createFunction(contract.contract(), name, parameters);
         return call(credential, contract, BigInteger.ZERO, function);
@@ -257,7 +257,7 @@ public class TestBlockchain {
 
     public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue,
                            String name, Object... parameters)
-            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException {
+            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, ExecutionException, InterruptedException, ConvertException {
 
         Function function =  Utils.createFunction(contract.contract(), name, parameters);
         return call(credential, contract, weiValue, function);

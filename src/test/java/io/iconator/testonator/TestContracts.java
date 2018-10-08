@@ -159,7 +159,7 @@ public class TestContracts {
     }
 
     @Test
-    public void testCall() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException {
+    public void testCall() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException, ConvertException {
         String contractSrc = "pragma solidity ^0.4.24;\n" +
                 "\n" +
                 "contract Exampl2 {\n" +
@@ -188,7 +188,7 @@ public class TestContracts {
     }
 
     @Test
-    public void testEvents() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException {
+    public void testEvents() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException, ConvertException {
         start = System.currentTimeMillis();
         String contractSrc ="pragma solidity ^0.4.24;\n" +
                 "\n" +
@@ -225,7 +225,7 @@ public class TestContracts {
     }
 
     @Test
-    public void testEvents2() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException {
+    public void testEvents2() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException, ConvertException {
         String contractSrc ="pragma solidity ^0.4.24;\n" +
                 "contract ExampleEvent {\n" +
                 "\tuint256 public counter=3;\n" +
@@ -263,7 +263,7 @@ public class TestContracts {
     }
 
     @Test
-    public void testArrays() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public void testArrays() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ConvertException {
         String contractSrc = "contract Example2 {\n" +
                 "uint8 public result;\n" +
                 "    function mint(uint8[] numbers) public {\n" +
@@ -287,7 +287,7 @@ public class TestContracts {
     }
 
     @Test
-    public void testLibrary() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public void testLibrary() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ConvertException {
         String contractSrc1 = "pragma solidity ^0.4.24;\n" +
                 "import \"./LibraryTest.sol\";\n" +
                 "contract LibImport {\n" +
@@ -319,7 +319,7 @@ public class TestContracts {
     }
 
     @Test
-    public void testLibrary2() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public void testLibrary2() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ConvertException {
         String contractSrc1 = "pragma solidity ^0.4.24;\n" +
                 "import \"./LibraryTest.sol\";\n" +
                 "contract LibImport {\n" +

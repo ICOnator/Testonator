@@ -24,7 +24,7 @@ import java.util.Map;
 public class Utils {
 
     public static Function createFunction(Contract contract, String name, Object... input)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ConvertException {
         for (CallTransaction.Function f : contract.functions()) {
             if (f != null && f.name.equals(name)) {
                 if (f.inputs.length != input.length) {
@@ -34,13 +34,8 @@ public class Utils {
                 int len = f.inputs.length;
                 for (int i = 0; i < len; i++) {
                     CallTransaction.Param p = f.inputs[i];
-                    try {
-                        Type<?> t = convertTypes(p.getType(), input[i]);
-                        inputParameters.add(t);
-                    } catch (ConvertException ce) {
-                        //wrong type, try next
-                        continue;
-                    }
+                    Type<?> t = convertTypes(p.getType(), input[i]);
+                    inputParameters.add(t);
                 }
 
                 List<TypeReference<?>> outputParameters = new ArrayList<>();
