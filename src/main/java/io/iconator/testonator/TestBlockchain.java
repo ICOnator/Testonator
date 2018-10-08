@@ -106,7 +106,13 @@ public class TestBlockchain {
     }
 
     public TestBlockchain start(int port, String path) throws Exception {
-        return start(port, Web3j.build(new HttpService("http://localhost:8545"+path)), path);
+        return start(port, Web3j.build(new HttpService("http://localhost:"+port+path)), path);
+    }
+
+    public TestBlockchain startRemote(String url) throws Exception {
+        this.web3j = Web3j.build(new HttpService(url));
+
+        return this;
     }
 
     public TestBlockchain start(int port, Web3j web3j, String path) throws Exception {
@@ -185,8 +191,10 @@ public class TestBlockchain {
     }
 
     public TestBlockchain stop() throws Exception {
-        server.stop();
-        server.destroy();
+        if(server != null) {
+            server.stop();
+            server.destroy();
+        }
         server = null;
         standaloneBlockchain = null;
         cacheDeploy.clear();
@@ -264,13 +272,22 @@ public class TestBlockchain {
     }
 
     public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue, Function function) throws IOException, ExecutionException, InterruptedException {
+        List<Contract> contracts = new ArrayList<>();
+        contracts.add(contract.contract());
+        for(Contract c:contract.referencedContracts()) {
+            contracts.add(c);
+        }
+        return call(credential, contract.contractAddress(), contracts, weiValue, function);
+    }
+
+    public List<Event> call(Credentials credential, String contractAddress, List<Contract> contracts, BigInteger weiValue, Function function) throws IOException, ExecutionException, InterruptedException {
         BigInteger nonce = nonce(credential);
         String encodedFunction = FunctionEncoder.encode(function);
         RawTransaction rawTransaction = RawTransaction.createTransaction(
                 nonce,
                 GAS_PRICE,
                 GAS_LIMIT,
-                contract.contractAddress(),
+                contractAddress,
                 weiValue,
                 encodedFunction);
 
@@ -287,12 +304,6 @@ public class TestBlockchain {
 
         if(!receipt.getResult().isStatusOK()) {
             LOG.warn("Function [{}] failed", function.getName());
-        }
-
-        List<Contract> contracts = new ArrayList<>();
-        contracts.add(contract.contract());
-        for(Contract c:contract.referencedContracts()) {
-            contracts.add(c);
         }
 
         List<Event> events = new ArrayList<>();
