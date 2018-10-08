@@ -160,18 +160,20 @@ public class Utils {
         }
     }
 
-    public static String encodeParameters(Type... objects) {
-        List<Type> params = new ArrayList<Type>(objects.length + 2);
+    public static String encodeParameters(int offsetUint256, Type... objects) {
+        List<Type> params = new ArrayList<Type>(objects.length + offsetUint256);
 
         //these are dummy values, so that the encoded offset is correct
-        params.add(new Address("0x0"));
-        params.add(new Uint256(0));
+        for(int i=0;i<offsetUint256;i++) {
+            params.add(new Uint256(0));
+        }
 
         for(Type t:objects) {
             params.add(t);
         }
         String encoded = FunctionEncoder.encodeConstructor(params);
-        return encoded.substring(128);
+        //32bits are represented in textual way by 64bits
+        return encoded.substring(offsetUint256 * 64);
     }
 
     public static Type createArray(Type... types) {
