@@ -60,16 +60,16 @@ public class TestBlockchain {
     public final static ECKey ACCOUNT_8 = ECKey.fromPrivate(Hex.decode("649f638d220fd6319ca4af8f5e0e261d15a66172830077126fef21fdbdd95410"));
     public final static ECKey ACCOUNT_9 = ECKey.fromPrivate(Hex.decode("ea8f71fc4690e0733f3478c3d8e53790988b9e51deabd10185364bc59c58fdba"));
 
-    public final static Credentials CREDENTIAL_0 = create(ACCOUNT_0);
-    public final static Credentials CREDENTIAL_1 = create(ACCOUNT_1);
-    public final static Credentials CREDENTIAL_2 = create(ACCOUNT_2);
-    public final static Credentials CREDENTIAL_3 = create(ACCOUNT_3);
-    public final static Credentials CREDENTIAL_4 = create(ACCOUNT_4);
-    public final static Credentials CREDENTIAL_5 = create(ACCOUNT_5);
-    public final static Credentials CREDENTIAL_6 = create(ACCOUNT_6);
-    public final static Credentials CREDENTIAL_7 = create(ACCOUNT_7);
-    public final static Credentials CREDENTIAL_8 = create(ACCOUNT_8);
-    public final static Credentials CREDENTIAL_9 = create(ACCOUNT_9);
+    public final static Credentials CREDENTIAL_0 = fromECKey(ACCOUNT_0);
+    public final static Credentials CREDENTIAL_1 = fromECKey(ACCOUNT_1);
+    public final static Credentials CREDENTIAL_2 = fromECKey(ACCOUNT_2);
+    public final static Credentials CREDENTIAL_3 = fromECKey(ACCOUNT_3);
+    public final static Credentials CREDENTIAL_4 = fromECKey(ACCOUNT_4);
+    public final static Credentials CREDENTIAL_5 = fromECKey(ACCOUNT_5);
+    public final static Credentials CREDENTIAL_6 = fromECKey(ACCOUNT_6);
+    public final static Credentials CREDENTIAL_7 = fromECKey(ACCOUNT_7);
+    public final static Credentials CREDENTIAL_8 = fromECKey(ACCOUNT_8);
+    public final static Credentials CREDENTIAL_9 = fromECKey(ACCOUNT_9);
 
     public final static Integer DEFAULT_PORT = 8545;
     public final static String DEFAULT_PATH = "/";
@@ -217,6 +217,10 @@ public class TestBlockchain {
         EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
                 credentials.getAddress(), DefaultBlockParameterName.LATEST).sendAsync().get();
         return ethGetTransactionCount.getTransactionCount();
+    }
+
+    public static Credentials fromECKey(ECKey ecKey) {
+        return create(ecKey);
     }
 
     public static Credentials create(ECKey ecKey) {
