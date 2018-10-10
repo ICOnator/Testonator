@@ -16,6 +16,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthCompileSolidity;
 import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -185,6 +186,35 @@ public class TestContracts {
         String value = testBlockchain.callConstant(deployed, "get").get(0).getValue().toString();
         Assert.assertEquals(value, "5");
         Assert.assertEquals(balance2, testBlockchain.balance(CREDENTIAL_0));
+    }
+
+    @Test
+    public void testCall2() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException, ConvertException {
+        String contractSrc = "pragma solidity ^0.4.24;\n" +
+                "\n" +
+                "contract Exampl2 {\n" +
+                "\tuint256 public counter = 15;\n" +
+                "\tfunction set(uint256 _counter) public returns (uint256) {\n" +
+                "\t    uint256 tmp = counter;\n" +
+                "\t    counter = _counter;\n" +
+                "\t    return tmp;\n" +
+                "\t}\n" +
+                "\tfunction get() public view returns (uint256) {\n" +
+                "\t    return counter;\n" +
+                "\t}\n" +
+                "}";
+        Map<String, Contract> ret = compile(contractSrc);
+        BigInteger balance = testBlockchain.balance(CREDENTIAL_0);
+        System.out.println("balance1: "+balance);
+        DeployedContract deployed = testBlockchain.deploy(CREDENTIAL_0, ret.get("Exampl2"));
+
+        testBlockchain.call(CREDENTIAL_0, deployed.contractAddress(),
+                new FunctionBuilder("set")
+                        .addInput("uint256", new BigInteger("23"))
+                        .outputs("uint256"));
+
+        String value = testBlockchain.callConstant(deployed, "get").get(0).getValue().toString();
+        Assert.assertEquals(value, "23");
     }
 
     @Test

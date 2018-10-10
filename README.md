@@ -2,9 +2,35 @@
 
 # Testonator
 
-This library provides a JSON-RPC wrapper to a standalone Ethereum blockchain, used for testing purposes.
+This library provides a JSON-RPC wrapper to a standalone Ethereum blockchain, used for testing purposes. It uses Solidity 0.4.25. It also provides an wrapper for web3j, where contracts do not have to be generated into Java classes. If your contract looks like this:
 
-## Add the dependency
+```
+pragma solidity ^0.4.25;
+               
+contract Example2 {
+    uint256 public counter = 15;
+    function setMyCounter(uint256 _counter) public returns (uint256) {
+        uint256 tmp = counter;
+        counter = _counter;
+        return tmp;
+    }
+}
+```
+
+You can use this library to call the function with a FunctionBuilder:
+
+```
+
+Credentials cred = fromECPrivateKey("1b86...");
+String contractAddress = "0xa5...";
+testBlockchain.call(cred, contractAddress, 
+    new FunctionBuilder("setMyCounter")
+        .addInput("uint256", new BigInteger("23"))
+        .outputs("uint256"));
+```
+
+
+## Installation: add the dependency
 
 Maven:
 
@@ -12,14 +38,14 @@ Maven:
 <dependency>
     <groupId>io.iconator</groupId>
     <artifactId>testonator</artifactId>
-    <version>1.0.26</version>
+    <version>1.0.27</version>
 </dependency>
 ```
 
 Gradle:
 
 ```
-compile 'io.iconator:testonator:1.0.26'
+compile 'io.iconator:testonator:1.0.27'
 ```
 
 ## Example of JSON-RPC request
