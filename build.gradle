@@ -22,7 +22,7 @@ task sourceJar(type: Jar) {
 
 group 'io.iconator'
 archivesBaseName = 'testonator'
-version '1.0.27'
+version '1.0.28'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -36,11 +36,11 @@ repositories {
 }
 
 dependencies {
-    compile 'org.ethereum:ethereumj-core:1.8.2-RELEASE'
+    compile 'org.ethereum:ethereumj-core:1.9.0-RELEASE'
     compile 'org.ethereum:solcJ-all:0.4.25'
     compile 'com.github.briandilley.jsonrpc4j:jsonrpc4j:1.5.3'
     compile 'commons-io:commons-io:2.6'
-    compile 'org.web3j:core:3.5.0'
+    compile 'org.web3j:core:3.6.0'
     compile 'org.eclipse.jetty:jetty-server:9.4.12.v20180830'
     compile 'org.eclipse.jetty:jetty-servlet:9.4.12.v20180830'
     compile 'javax.portlet:portlet-api:3.0.1'

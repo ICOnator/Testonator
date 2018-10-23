@@ -35,10 +35,10 @@ library Utils {
      * @param _fee uint256 The amount of tokens paid to msg.sender, by the owner.
      * @param _nonce uint256 Presigned transaction number.
      */
-    function transferPreSignedHashing(address _token, address _to, uint256 _value, uint256 _fee,
+    function transferAndCallPreSignedHashing(address _token, address _to, uint256 _value, uint256 _fee,
         uint256 _nonce, bytes4 _methodName, bytes _args) internal pure returns (bytes32) {
-        /* "dbe43fca": transferPreSignedHashing(address,address,address,uint256,uint256,uint256,bytes4,bytes) */
-        return keccak256(bytes4(0xdbe43fca), _token, _to, _value, _fee, _nonce, _methodName, _args);
+        /* "38980f82": transferAndCallPreSignedHashing(address,address,uint256,uint256,uint256,bytes4,bytes) */
+        return keccak256(bytes4(0x38980f82), _token, _to, _value, _fee, _nonce, _methodName, _args);
     }
 
     function transferPreSignedHashing(address _token, address _to, uint256 _value, uint256 _fee,
@@ -52,7 +52,10 @@ library Utils {
     * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
     * @param sig bytes signature, the signature is generated using web3.eth.sign()
     */
-    function recover(bytes32 hash, bytes sig) internal pure returns (address) {bytes32 r; bytes32 s; uint8 v;
+    function recover(bytes32 hash, bytes sig) internal pure returns (address) {
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
 
         //Check the signature length
         if (sig.length != 65) {

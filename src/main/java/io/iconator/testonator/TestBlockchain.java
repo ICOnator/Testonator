@@ -9,7 +9,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.ethereum.config.SystemProperties;
-import org.ethereum.config.blockchain.ByzantiumConfig;
+import org.ethereum.config.blockchain.ConstantinopleConfig;
 import org.ethereum.config.blockchain.DaoHFConfig;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.CallTransaction;
@@ -22,7 +22,8 @@ import org.spongycastle.util.encoders.Hex;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.*;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -187,7 +188,7 @@ public class TestBlockchain {
 
     private RPCServlet createBlockchainServlet() {
         standaloneBlockchain = new StandaloneBlockchain().withAutoblock(true) //after each transaction, a new block will be created
-                .withNetConfig(new ByzantiumConfig(new DaoHFConfig()){
+                .withNetConfig(new ConstantinopleConfig(new DaoHFConfig()){
                     @Override
                     public BigInteger calcDifficulty(BlockHeader curBlock, BlockHeader parent) {
                         //We don't want to mine
@@ -281,6 +282,10 @@ public class TestBlockchain {
         return callConstant(credential, contractAddress, functionBuilder.build());
     }
 
+    public List<Type> callConstant(DeployedContract contract, FunctionBuilder functionBuilder) throws InterruptedException, ExecutionException, IOException {
+        return callConstant(contract.from() == null? contract.owner() : contract.from(), contract.contractAddress(), functionBuilder.build());
+    }
+
     public List<Type> callConstant(Credentials credential, String contractAddress, Function function)
             throws IOException, ExecutionException, InterruptedException {
         String encodedFunction = FunctionEncoder.encode(function);
@@ -318,9 +323,24 @@ public class TestBlockchain {
         return call(credential, contract, weiValue, function);
     }
 
+    public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue)
+            throws IOException, ExecutionException, InterruptedException {
+        return call(credential, contract, weiValue, (Function) null);
+    }
+
     public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue, FunctionBuilder functionBuilder)
             throws IOException, ExecutionException, InterruptedException {
         return call(credential, contract, weiValue, functionBuilder.build());
+    }
+
+    public List<Event> call(Credentials credential, DeployedContract contract, FunctionBuilder functionBuilder)
+            throws IOException, ExecutionException, InterruptedException {
+        return call(credential, contract, BigInteger.ZERO, functionBuilder.build());
+    }
+
+    public List<Event> call(DeployedContract contract, FunctionBuilder functionBuilder)
+            throws IOException, ExecutionException, InterruptedException {
+        return call(contract.from() == null? contract.owner() : contract.from(), contract, BigInteger.ZERO, functionBuilder.build());
     }
 
     public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue, Function function) throws IOException, ExecutionException, InterruptedException {
@@ -347,17 +367,34 @@ public class TestBlockchain {
         return call(credential, contractAddress, contracts, weiValue, functionBuilder.build());
     }
 
+    public void setTime(int timeSeconds) {
+        standaloneBlockchain.withCurrentTime(new Date(timeSeconds * 1000));
+        standaloneBlockchain.createBlock();
+        //BlockchainImpl b = standaloneBlockchain.getBlockchain();
+        //Block bl = b.createNewBlock(b.getBestBlock(), Collections.<org.ethereum.core.Transaction>emptyList(), Collections.<BlockHeader>emptyList(), timeSeconds);
+        //standaloneBlockchain.getBlockchain().addImpl(standaloneBlockchain.getBlockchain().getRepository(), bl);
+    }
+
     public List<Event> call(Credentials credential, String contractAddress, List<Contract> contracts, BigInteger weiValue, Function function) throws IOException, ExecutionException, InterruptedException {
         BigInteger nonce = nonce(credential);
-        String encodedFunction = FunctionEncoder.encode(function);
-        RawTransaction rawTransaction = RawTransaction.createTransaction(
-                nonce,
-                GAS_PRICE,
-                GAS_LIMIT,
-                contractAddress,
-                weiValue,
-                encodedFunction);
-
+        final RawTransaction rawTransaction;
+        if(function != null) {
+            String encodedFunction = FunctionEncoder.encode(function);
+            rawTransaction = RawTransaction.createTransaction(
+                    nonce,
+                    GAS_PRICE,
+                    GAS_LIMIT,
+                    contractAddress,
+                    weiValue,
+                    encodedFunction);
+        } else {
+            rawTransaction = RawTransaction.createEtherTransaction(
+                    nonce,
+                    GAS_PRICE,
+                    GAS_LIMIT,
+                    contractAddress,
+                    weiValue);
+        }
         byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credential);
 
         String hexValue = Numeric.toHexString(signedMessage);
@@ -370,7 +407,12 @@ public class TestBlockchain {
         EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(ret.getTransactionHash()).sendAsync().get();
 
         if(!receipt.getResult().isStatusOK()) {
-            LOG.warn("Function [{}] failed", function.getName());
+            if(function != null) {
+                LOG.warn("Function [{}] failed, wei: {}", function.getName(), weiValue);
+            } else {
+                LOG.warn("Function [] failed, wei: {}", weiValue);
+            }
+            return null;
         }
 
         List<Event> events = new ArrayList<>();
