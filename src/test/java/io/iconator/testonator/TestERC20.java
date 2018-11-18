@@ -374,7 +374,7 @@ public class TestERC20 {
 
         List<Event> events = blockchain.call(deployed,
                 new FunctionBuilder("mint").addInput("address[]", addresses)
-                        .addInput("uint192[]", values));
+                        .addInput("uint256[]", values));
 
         Assert.assertEquals(1, events.size());
         Assert.assertEquals("Transfer", events.get(0).name());
@@ -434,7 +434,7 @@ public class TestERC20 {
 
         List<Event> events = blockchain.call(deployed,
                 new FunctionBuilder("mint").addInput("address[]", addresses)
-                        .addInput("uint192[]", values));
+                        .addInput("uint256[]", values));
 
         Assert.assertNull(events);
     }
@@ -452,7 +452,7 @@ public class TestERC20 {
 
         List<Event> events = blockchain.call(deployed,
                 new FunctionBuilder("mint").addInput("address[]", addresses)
-                        .addInput("uint192[]", values));
+                        .addInput("uint256[]", values));
 
         Assert.assertEquals(1, events.size());
         Assert.assertEquals("Transfer", events.get(0).name());
@@ -523,7 +523,7 @@ public class TestERC20 {
 
         List<Event> events = blockchain.call(deployed,
                 new FunctionBuilder("mint").addInput("address[]", addresses)
-                        .addInput("uint192[]", values));
+                        .addInput("uint256[]", values));
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("lockTokens").addInput("address[]", addresses)
@@ -534,6 +534,9 @@ public class TestERC20 {
         Assert.assertEquals(CREDENTIAL_5.getAddress(), events.get(0).values().get(0).getValue().toString());
         Assert.assertEquals("2222", events.get(0).values().get(1).getValue().toString());
 
+        events = blockchain.call(deployed,
+                new FunctionBuilder("setAdmin").addInput("address", TestBlockchain.CREDENTIAL_1.getAddress())
+                        .addInput("address", TestBlockchain.CREDENTIAL_2.getAddress()));
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("finishMinting"));
@@ -563,11 +566,15 @@ public class TestERC20 {
 
         List<Event> events = blockchain.call(deployed,
                 new FunctionBuilder("mint").addInput("address[]", addresses)
-                        .addInput("uint192[]", values));
+                        .addInput("uint256[]", values));
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("lockTokens").addInput("address[]", addresses)
                         .addInput("uint256[]", values));
+
+        events = blockchain.call(deployed,
+                new FunctionBuilder("setAdmin").addInput("address", TestBlockchain.CREDENTIAL_1.getAddress())
+                        .addInput("address", TestBlockchain.CREDENTIAL_2.getAddress()));
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("finishMinting"));
@@ -603,11 +610,15 @@ public class TestERC20 {
 
         List<Event> events = blockchain.call(deployed,
                 new FunctionBuilder("mint").addInput("address[]", addresses)
-                        .addInput("uint192[]", values));
+                        .addInput("uint256[]", values));
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("lockTokens").addInput("address[]", addresses)
                         .addInput("uint256[]", values));
+
+        events = blockchain.call(deployed,
+                new FunctionBuilder("setAdmin").addInput("address", TestBlockchain.CREDENTIAL_1.getAddress())
+                        .addInput("address", TestBlockchain.CREDENTIAL_2.getAddress()));
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("finishMinting"));

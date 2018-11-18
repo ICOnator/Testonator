@@ -7,20 +7,30 @@ contract ERC20ish {
 contract Voting {
     ERC20ish public shareContract;
 
-    uint64 untilBlock = 10;
+    uint64 untilBlock = 8;
 
-    uint256 yay = 0;
-    uint256 nay = 0;
+    uint256 public yay = 0;
+    uint256 public nay = 0;
 
-    constructor(address _shareContract) public {
+    mapping (address => bool) internal voted;
+
+    event Voted(address indexed from, uint256 value, bool vote);
+
+    function set(address _shareContract) public {
+        //hardcode this
         shareContract = ERC20ish(_shareContract);
     }
 
-    function voting(bool vote) public {
+    function vote(bool vote) public {
+        //require(!voted[msg.sender]); -> disable for testing
+        uint256 votingPower = shareContract.balanceOf(msg.sender, untilBlock);
         if(vote) {
-            yay += shareContract.balanceOf(msg.sender, untilBlock);
+            yay += votingPower;
+            emit Voted(msg.sender, votingPower, true);
         } else {
-            nay += shareContract.balanceOf(msg.sender, untilBlock);
+            nay += votingPower;
+            emit Voted(msg.sender, votingPower, false);
         }
+        //voted[msg.sender] = true; -> disable for testing
     }
 }

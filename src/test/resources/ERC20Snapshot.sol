@@ -15,16 +15,16 @@ contract ERC20Snapshot {
 
     bool transfersEnabled = true;
 
-    constructor(address second) public {
-        Checkpoint memory tmp;
-        tmp.fromBlock = uint64(block.number);
-        tmp.amount = 10000;
-        balances[msg.sender].push(tmp);
+    function mint(address second) public {
+        Checkpoint memory tmp1;
+        tmp1.fromBlock = uint64(block.number);
+        tmp1.amount = 10000;
+        balances[msg.sender].push(tmp1);
 
-        heckpoint memory tmp;
-        tmp.fromBlock = uint64(block.number);
-        tmp.amount = 5000;
-        balances[second].push(tmp);
+        Checkpoint memory tmp2;
+        tmp2.fromBlock = uint64(block.number);
+        tmp2.amount = 5000;
+        balances[second].push(tmp2);
     }
 
     function balanceOf(address _owner) public view returns (uint256) {
@@ -68,15 +68,15 @@ contract ERC20Snapshot {
         uint192 value = uint192(_value);
         require(uint256(value) == _value);
 
-        // note: while balanceOf returns an uint256 it can be safely cast to
+        // while balanceOf returns an uint256 it can be safely cast to
         // uint192, since this type is used for the internal representation (and
         // the total supply is lower)
-        uint192 fromBalance = uint192(balanceOf(_from));
+        uint192 fromBalance = uint192(balanceOf(msg.sender));
         // check ERC20 conditions
         require(value <= fromBalance);
 
         // subtract tokens from sender
-        balances[_from].push(Checkpoint(
+        balances[msg.sender].push(Checkpoint(
                 uint64(block.number),
                 fromBalance - value   // no over-/underflow possible
             ));

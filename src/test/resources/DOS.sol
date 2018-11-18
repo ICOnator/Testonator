@@ -2,7 +2,6 @@
 pragma solidity ^0.4.25;
 
 import "./SafeMath.sol";
-import "./SafeMath192.sol";
 import "./Utils.sol";
 
 contract ERC20 {
@@ -46,15 +45,14 @@ contract ERC865Plus677ish {
 
 //TODO: check ERC865 for latest development
 contract DOS is ERC20, ERC865Plus677ish {
-
     using SafeMath for uint256;
-    using SafeMath192 for uint192;
 
     string public constant name = "DOS Token";
     string public constant symbol = "DOS";
     uint8 public constant decimals = 18;
 
-    mapping(address => Snapshot[]) balances;
+    //TODO: no voting, no snapshot
+    mapping(address => uint256) balances;
     mapping(address => mapping(address => uint256)) internal allowed;
     // nonces of transfers performed
     mapping(bytes => bool) signatures;
@@ -66,18 +64,20 @@ contract DOS is ERC20, ERC865Plus677ish {
     // 900000000000000000000000000 (max supply) we have 192bits in the Snapshot struct, which is more than enough
     uint256 constant public maxSupply = 900000000 * (10 ** uint256(decimals));
 
-    //we want to create a snapshot of the token balances will fit into 256bit
-    struct Snapshot {
-        // fromBlock is the block number that the value was generated from
-        uint64 fromBlock;
-        uint192 amount;
-    }
-
     // token lockups
     mapping(address => uint256) lockups;
 
     // ownership
     address public owner;
+    address public admin1;
+    address public admin2;
+
+    //3 admins can disable the transfers, however, the balances remain.
+    //this can be used to migrate to another contract. This flag can only
+    //be set by 3 admins.
+    bool public transfersEnabled1 = true;
+    bool public transfersEnabled2 = true;
+    bool public transfersEnabled3 = true;
 
     // minting
     bool public mintingDone = false;
@@ -97,38 +97,36 @@ contract DOS is ERC20, ERC865Plus677ish {
         owner = _newOwner;
     }
 
-    // minting functionality
-    function mint(address[] _recipients, uint192[] _amounts) public {
+    function setAdmin(address _admin1, address _admin2) public {
         require(owner == msg.sender);
-        require(mintingDone == false);
+        require(!mintingDone);
+        admin1 = _admin1;
+        admin2 = _admin2;
+    }
+
+    // minting functionality
+    function mint(address[] _recipients, uint256[] _amounts) public {
+        require(owner == msg.sender);
+        require(!mintingDone);
         require(_recipients.length == _amounts.length);
         require(_recipients.length <= 256);
 
         for (uint8 i = 0; i < _recipients.length; i++) {
             address recipient = _recipients[i];
-            uint192 amount = _amounts[i];
+            uint256 amount = _amounts[i];
 
-            if(balances[recipient].length == 0) {
-                Snapshot memory tmp;
-                tmp.fromBlock = uint64(block.number);
-                tmp.amount = amount;
-                balances[recipient].push(tmp);
-            } else {
-                Snapshot storage current = balances[recipient][balances[recipient].length - 1];
-                current.amount = current.amount.add(amount);
-                //we don't set the from block, as multiple payments can be seen as one payment, no need to distinguish
-            }
+            balances[recipient] += amount;
 
-            totalSupply_ = totalSupply_.add(uint256(amount));
+            totalSupply_ = totalSupply_.add(amount);
             require(totalSupply_ <= maxSupply); // enforce maximum token supply
 
-            emit Transfer(0, recipient, uint256(amount));
+            emit Transfer(0, recipient, amount);
         }
     }
 
     function lockTokens(address[] _holders, uint256[] _timeouts) public {
         require(owner == msg.sender);
-        require(mintingDone == false);
+        require(!mintingDone);
         require(_holders.length == _timeouts.length);
         require(_holders.length <= 256);
 
@@ -149,9 +147,27 @@ contract DOS is ERC20, ERC865Plus677ish {
     //this variable is set to public, thus, getters are generated automatically
     function finishMinting() public {
         require(owner == msg.sender);
-        require(mintingDone == false);
+        require(!mintingDone);
+        require(admin1 != address(0));
+        require(admin2 != address(0));
 
         mintingDone = true;
+    }
+
+    function transferDisable() public {
+        if(msg.sender == owner) {
+            transfersEnabled1 = false;
+        } else if(msg.sender == admin1) {
+            transfersEnabled2 = false;
+        } else if(msg.sender == admin2) {
+            transfersEnabled3 = false;
+        } else {
+            revert();
+        }
+    }
+
+    function isTransferEnabaled() public view returns (bool) {
+        return transfersEnabled1 || transfersEnabled2 || transfersEnabled3;
     }
 
     /**
@@ -168,49 +184,27 @@ contract DOS is ERC20, ERC865Plus677ish {
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
-        require(_value <= allowed[_from][msg.sender]);
-        doTransfer(_from, _to, _value, 0, 0);
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
+        doTransfer(_from, _to, _value, 0, 0);
         emit Transfer(_from, _to, _value);
         return true;
     }
 
     function doTransfer(address _from, address _to, uint256 _value, uint256 _fee, address _feeAddress) internal {
+        require(isTransferEnabaled());
         require(_to != address(0));
-        uint192 fromValue = uint192(balanceOf(_from)); //this can only be a uint192 number, no need to check
-        uint192 total = uint192(_value.add(_fee));
-        require(total >= uint192(_value)); //check overflow
-        require(total <= fromValue);
-        require(mintingDone == true);
+        uint256 total = _value.add(_fee);
+        require(mintingDone);
         require(now >= lockups[_from]); // check lockups
+        require(total <= balances[_from]);
 
-        from(fromValue, total, _from);
+        balances[_from] = balances[_from].sub(total);
 
         if(_fee > 0 && _feeAddress != address(0)) {
-            uint192 feeBalance = uint192(balanceOf(_feeAddress)); //this can only be a uint192 number, no need to check
-            uint192 fee = uint192(_fee);
-            require(uint256(fee) == _fee); //192bit value must be the same as 256bit value
-            to(feeBalance, fee, _feeAddress); //event is TransferPreSigned, that will be emitted after this function call
+            balances[_feeAddress] = balances[_feeAddress].add(_fee);
         }
 
-        uint192 toValue = uint192(balanceOf(_to));//this can only be a uint192 number, no need to check
-        uint192 value = uint192(_value);
-        require(uint256(value) == _value); //192bit value must be the same as 256bit value
-        to(toValue, value, _to);
-    }
-
-    function from(uint192 _fromBalance, uint192 _totalValue, address _fromAddress) internal {
-        Snapshot memory tmpFrom;
-        tmpFrom.fromBlock = uint64(block.number);
-        tmpFrom.amount = _fromBalance.sub(_totalValue);
-        balances[_fromAddress].push(tmpFrom);
-    }
-
-    function to(uint192 _toBalance, uint192 _totalValue, address _toAddress) internal {
-        Snapshot memory tmpTo;
-        tmpTo.fromBlock = uint64(block.number);
-        tmpTo.amount = _toBalance.add(_totalValue);
-        balances[_toAddress].push(tmpTo);
+        balances[_to] = balances[_to].add(_value);
     }
 
     /**
@@ -219,31 +213,8 @@ contract DOS is ERC20, ERC865Plus677ish {
     * @return An uint256 representing the amount owned by the passed address.
     */
     function balanceOf(address _owner) public view returns (uint256) {
-        if(balances[_owner].length == 0) {
-            return 0;
-        }
-        //return last amount
-        return uint256(balances[_owner][balances[_owner].length - 1].amount);
+        return balances[_owner];
     }
-
-    //This is used to get the balance from a specific point in the history. This is the only way,
-    //how a historic balance can be used within solidity contracts
-    function balanceOf(address _owner, uint64 _fromBlock) public view returns (uint256) {
-        // Binary search of the value in the array
-        uint min = 0;
-        uint max = balances[_owner].length-1;
-        while (max > min) {
-            uint mid = (max + min + 1)/ 2;
-            if (balances[_owner][mid].fromBlock<=_fromBlock) {
-                min = mid;
-            } else {
-                max = mid-1;
-            }
-        }
-
-        return uint256(balances[_owner][min].amount);
-    }
-
 
 
     /**
@@ -258,7 +229,7 @@ contract DOS is ERC20, ERC865Plus677ish {
      */
     function approve(address _spender, uint256 _value) public returns (bool) {
         require(_spender != address(0));
-        require(mintingDone == true);
+        require(mintingDone);
         allowed[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
@@ -285,7 +256,7 @@ contract DOS is ERC20, ERC865Plus677ish {
      * @param _addedValue The amount of tokens to increase the allowance by.
      */
     function increaseApproval(address _spender, uint256 _addedValue) public returns (bool) {
-        require(mintingDone == true);
+        require(mintingDone);
 
         allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_addedValue);
         emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
@@ -303,7 +274,7 @@ contract DOS is ERC20, ERC865Plus677ish {
      * @param _subtractedValue The amount of tokens to decrease the allowance by.
      */
     function decreaseApproval(address _spender, uint256 _subtractedValue) public returns (bool) {
-        require(mintingDone == true);
+        require(mintingDone);
 
         uint oldValue = allowed[msg.sender][_spender];
         if (_subtractedValue > oldValue) {
@@ -316,7 +287,6 @@ contract DOS is ERC20, ERC865Plus677ish {
     }
 
     function transferAndCall(address _to, uint256 _value, bytes4 _methodName, bytes _args) public returns (bool) {
-        require(mintingDone == true);
         require(transfer(_to, _value));
 
         emit TransferAndCall(msg.sender, _to, _value, _methodName, _args);
@@ -332,7 +302,7 @@ contract DOS is ERC20, ERC865Plus677ish {
     function transferPreSigned(bytes _signature, address _to, uint256 _value, uint256 _fee,
         uint256 _nonce) public returns (bool) {
 
-        require(signatures[_signature] == false);
+        require(!signatures[_signature]);
 
         bytes32 hashedTx = Utils.transferPreSignedHashing(address(this), _to, _value, _fee, _nonce);
         address from = Utils.recover(hashedTx, _signature);
@@ -350,7 +320,7 @@ contract DOS is ERC20, ERC865Plus677ish {
     function transferAndCallPreSigned(bytes _signature, address _to, uint256 _value, uint256 _fee, uint256 _nonce,
         bytes4 _methodName, bytes _args) public returns (bool) {
 
-        require(signatures[_signature] == false);
+        require(!signatures[_signature]);
 
         bytes32 hashedTx = Utils.transferAndCallPreSignedHashing(address(this), _to, _value, _fee, _nonce, _methodName, _args);
         address from = Utils.recover(hashedTx, _signature);
