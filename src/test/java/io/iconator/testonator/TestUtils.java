@@ -28,9 +28,24 @@ public class TestUtils {
         File contractFile1 = Paths.get(ClassLoader.getSystemResource("SafeMath.sol").toURI()).toFile();
         File contractFile2 = Paths.get(ClassLoader.getSystemResource("Utils.sol").toURI()).toFile();
         File contractFile3 = Paths.get(ClassLoader.getSystemResource("DOS.sol").toURI()).toFile();
-        File contractFile4 = Paths.get(ClassLoader.getSystemResource("SafeMath192.sol").toURI()).toFile();
-        Map<String, Contract> contracts = compile(contractFile3, contractFile1, contractFile2, contractFile4);
-        Assert.assertEquals(6, contracts.size()); //DOS.sol has 3 (ERC20, DOS, ERC865Plus677ish), plus the other 3 are 6
+        Map<String, Contract> contracts = compile(contractFile3, contractFile1, contractFile2);
+        Assert.assertEquals(5, contracts.size()); //DOS.sol has 3 (ERC20, DOS, ERC865Plus677ish), plus the other 3 are 6
+        for(String name:contracts.keySet()) {
+            System.out.println("Available contract names: " + name);
+        }
+        TestUtils.contracts = contracts;
+        return contracts;
+    }
+
+    public static Map<String, Contract> setupSnapshot() throws Exception {
+        if(contracts != null) {
+            return contracts;
+        }
+        File contractFile1 = Paths.get(ClassLoader.getSystemResource("ERC20Snapshot.sol").toURI()).toFile();
+        File contractFile2 = Paths.get(ClassLoader.getSystemResource("Voting.sol").toURI()).toFile();
+        Map<String, Contract> contracts = compile(contractFile1);
+        contracts.putAll(compile(contractFile2));
+        Assert.assertEquals(3, contracts.size());
         for(String name:contracts.keySet()) {
             System.out.println("Available contract names: " + name);
         }
@@ -68,12 +83,16 @@ public class TestUtils {
 
         List<Event> events = blockchain.call(deployed,
                 new FunctionBuilder("mint").addInput("address[]", addresses)
-                        .addInput("uint192[]", values));
+                        .addInput("uint256[]", values));
 
         Assert.assertEquals(counter, events.size());
         if(value1 > 0) {
             Assert.assertEquals("" + value1, events.get(0).values().get(2).getValue().toString());
         }
+
+        events = blockchain.call(deployed,
+                new FunctionBuilder("setAdmin").addInput("address", TestBlockchain.CREDENTIAL_1.getAddress())
+                        .addInput("address", TestBlockchain.CREDENTIAL_2.getAddress()));
 
         if(setFlag) {
             events = blockchain.call(deployed,
