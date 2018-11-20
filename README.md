@@ -38,14 +38,14 @@ Maven:
 <dependency>
     <groupId>io.iconator</groupId>
     <artifactId>testonator</artifactId>
-    <version>1.0.28</version>
+    <version>1.0.29</version>
 </dependency>
 ```
 
 Gradle:
 
 ```
-compile 'io.iconator:testonator:1.0.28'
+compile 'io.iconator:testonator:1.0.29'
 ```
 
 ## Example of JSON-RPC request

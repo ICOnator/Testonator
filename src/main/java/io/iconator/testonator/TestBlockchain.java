@@ -77,14 +77,15 @@ public class TestBlockchain {
 
     public final static Integer DEFAULT_PORT = 8545;
     public final static String DEFAULT_PATH = "/";
-    public static final BigInteger GAS_PRICE = BigInteger.valueOf(10_000_000_000L);
-    public static final BigInteger GAS_LIMIT = BigInteger.valueOf(8_300_000);
+
 
     private Server server = null;
     private StandaloneBlockchain standaloneBlockchain = null;
     private Web3j web3j;
     private ServletHolder holder;
     private Map<String, DeployedContract> cacheDeploy = new HashMap<>();
+    private BigInteger gasPrice = BigInteger.valueOf(10_000_000_000L);
+    private BigInteger gasLimit = BigInteger.valueOf(7_300_000);
 
     public static List<Credentials> credentials() {
         return credentials;
@@ -102,6 +103,24 @@ public class TestBlockchain {
         TestBlockchain t = new TestBlockchain();
         t.startLocal();
         LOG.info("Server running.");
+    }
+
+    public TestBlockchain gasPrice(BigInteger gasPrice) {
+        this.gasPrice = gasPrice;
+        return this;
+    }
+
+    public BigInteger gasPrice() {
+        return gasPrice;
+    }
+
+    public TestBlockchain gasLimit(BigInteger gasLimit) {
+        this.gasLimit = gasLimit;
+        return this;
+    }
+
+    public BigInteger gasLimit() {
+        return gasLimit;
     }
 
     @Deprecated
@@ -382,16 +401,16 @@ public class TestBlockchain {
             String encodedFunction = FunctionEncoder.encode(function);
             rawTransaction = RawTransaction.createTransaction(
                     nonce,
-                    GAS_PRICE,
-                    GAS_LIMIT,
+                    gasPrice,
+                    gasLimit,
                     contractAddress,
                     weiValue,
                     encodedFunction);
         } else {
             rawTransaction = RawTransaction.createEtherTransaction(
                     nonce,
-                    GAS_PRICE,
-                    GAS_LIMIT,
+                    gasPrice,
+                    gasLimit,
                     contractAddress,
                     weiValue);
         }
@@ -534,7 +553,7 @@ public class TestBlockchain {
         BigInteger nonce = nonce(credential);
         // create our transaction
         RawTransaction rawTransaction = RawTransaction.createContractTransaction(
-                nonce, GAS_PRICE, GAS_LIMIT, value, contract.code().getCode());
+                nonce, gasPrice, gasLimit, value, contract.code().getCode());
 
         // sign & send our transaction
         byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credential);
