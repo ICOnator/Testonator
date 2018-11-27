@@ -22,7 +22,7 @@ task sourceJar(type: Jar) {
 
 group 'io.iconator'
 archivesBaseName = 'testonator'
-version '1.0.29'
+version '1.0.30'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8

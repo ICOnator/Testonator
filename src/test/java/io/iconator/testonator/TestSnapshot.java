@@ -1,9 +1,6 @@
 package io.iconator.testonator;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.web3j.abi.datatypes.Type;
 
 import java.io.IOException;
@@ -24,6 +21,11 @@ public class TestSnapshot {
     public static void setup() throws Exception {
         blockchain = TestBlockchain.runLocal();
         contracts = TestUtils.setupSnapshot();
+    }
+
+    @AfterClass
+    public static void tearDown() throws Exception {
+        blockchain.shutdown();
     }
 
     @After

@@ -1,9 +1,6 @@
 package io.iconator.testonator;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -24,6 +21,11 @@ public class TestERC20 {
     public static void setup() throws Exception {
         blockchain = TestBlockchain.runLocal();
         contracts = TestUtils.setup();
+    }
+
+    @AfterClass
+    public static void tearDown() throws Exception {
+        blockchain.shutdown();
     }
 
     @After

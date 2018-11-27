@@ -43,16 +43,14 @@ public class TestContracts {
     @BeforeClass
     public static void setup() throws Exception {
         //System.setProperty("vm.structured.trace", "true");
-        testBlockchain = run();
+        testBlockchain = runLocal();
         web3j = Web3j.build(new HttpService("http://localhost:8545/"));
         System.out.println("setup done: "+(System.currentTimeMillis()-start));
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        if(testBlockchain != null) {
-            testBlockchain.stop();
-        }
+        testBlockchain.shutdown();
     }
 
     @Test

@@ -85,7 +85,8 @@ public class TestBlockchain {
     private ServletHolder holder;
     private Map<String, DeployedContract> cacheDeploy = new HashMap<>();
     private BigInteger gasPrice = BigInteger.valueOf(10_000_000_000L);
-    private BigInteger gasLimit = BigInteger.valueOf(7_300_000);
+    private BigInteger gasLimit = BigInteger.valueOf(5_000_000);
+    private int blockWaitTimeoutSeconds = 60;
 
     public static List<Credentials> credentials() {
         return credentials;
@@ -123,6 +124,15 @@ public class TestBlockchain {
         return gasLimit;
     }
 
+    public TestBlockchain blockWaitTimeoutSeconds(int blockWaitTimeoutSeconds) {
+        this.blockWaitTimeoutSeconds = blockWaitTimeoutSeconds;
+        return this;
+    }
+
+    public int blockWaitTimeoutSeconds() {
+        return blockWaitTimeoutSeconds;
+    }
+
     @Deprecated
     public static TestBlockchain run() throws Exception {
         return runLocal();
@@ -139,7 +149,7 @@ public class TestBlockchain {
 
     public static TestBlockchain runLocal(int port, String path) throws Exception {
         TestBlockchain t = new TestBlockchain();
-        return t.start(port, path);
+        return t.startLocal(port, path);
     }
 
     public static TestBlockchain runRemote(String url) throws Exception {
@@ -203,6 +213,15 @@ public class TestBlockchain {
         server.start();
 
         return this;
+    }
+
+    public void shutdown() throws Exception {
+        if (server != null) {
+            stop();
+        }
+        if(web3j != null) {
+            web3j.shutdown();
+        }
     }
 
     private RPCServlet createBlockchainServlet() {
@@ -420,10 +439,22 @@ public class TestBlockchain {
 
         EthSendTransaction ret = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         if (ret.hasError()) {
-            throw new IOException(ret.getError().toString());
+            throw new IOException(ret.getError().getMessage());
         }
 
-        EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(ret.getTransactionHash()).sendAsync().get();
+        EthGetTransactionReceipt receipt = null;
+        long start = System.currentTimeMillis();
+        while(start + (blockWaitTimeoutSeconds*1000) > System.currentTimeMillis()) {
+            receipt = web3j.ethGetTransactionReceipt(ret.getTransactionHash()).sendAsync().get();
+            if(receipt.getResult()!=null) {
+                break;
+            }
+            Thread.sleep(250);
+        }
+
+        if(receipt == null) {
+            throw new IOException("waited for "+blockWaitTimeoutSeconds+", did not get any reply back.");
+        }
 
         if(!receipt.getResult().isStatusOK()) {
             if(function != null) {

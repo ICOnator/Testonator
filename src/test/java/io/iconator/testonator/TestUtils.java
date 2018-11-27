@@ -20,6 +20,7 @@ import static io.iconator.testonator.TestBlockchain.compile;
 public class TestUtils {
 
     private static Map<String, Contract> contracts = null;
+    private static Map<String, Contract> contractsSnapshot = null;
 
     public static Map<String, Contract> setup() throws Exception {
         if(contracts != null) {
@@ -38,8 +39,8 @@ public class TestUtils {
     }
 
     public static Map<String, Contract> setupSnapshot() throws Exception {
-        if(contracts != null) {
-            return contracts;
+        if(contractsSnapshot != null) {
+            return contractsSnapshot;
         }
         File contractFile1 = Paths.get(ClassLoader.getSystemResource("ERC20Snapshot.sol").toURI()).toFile();
         File contractFile2 = Paths.get(ClassLoader.getSystemResource("Voting.sol").toURI()).toFile();
@@ -49,8 +50,8 @@ public class TestUtils {
         for(String name:contracts.keySet()) {
             System.out.println("Available contract names: " + name);
         }
-        TestUtils.contracts = contracts;
-        return contracts;
+        TestUtils.contractsSnapshot = contracts;
+        return contractsSnapshot;
     }
 
     public static void mint(TestBlockchain blockchain, DeployedContract deployed, String address1, String address2, String address3, int value1, int value2, int value3) throws NoSuchMethodException, InterruptedException, ExecutionException, InstantiationException, ConvertException, IllegalAccessException, InvocationTargetException, IOException {
