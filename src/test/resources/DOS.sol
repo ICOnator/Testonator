@@ -51,7 +51,6 @@ contract DOS is ERC20, ERC865Plus677ish {
     string public constant symbol = "DOS";
     uint8 public constant decimals = 18;
 
-    //TODO: no voting, no snapshot
     mapping(address => uint256) balances;
     mapping(address => mapping(address => uint256)) internal allowed;
     // nonces of transfers performed
@@ -166,7 +165,7 @@ contract DOS is ERC20, ERC865Plus677ish {
         }
     }
 
-    function isTransferEnabaled() public view returns (bool) {
+    function isTransferEnabled() public view returns (bool) {
         return transfersEnabled1 || transfersEnabled2 || transfersEnabled3;
     }
 
