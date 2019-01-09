@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.5.1;
 
 contract ERC20ish {
     function balanceOf(address owner, uint64 fromBlock) public view returns (uint256);
@@ -7,7 +7,7 @@ contract ERC20ish {
 contract Voting {
     ERC20ish public shareContract;
 
-    uint64 untilBlock = 8;
+    uint64 public untilBlock = 8;
 
     uint256 public yay = 0;
     uint256 public nay = 0;

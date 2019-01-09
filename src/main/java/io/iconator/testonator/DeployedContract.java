@@ -62,7 +62,6 @@ public class DeployedContract {
      * emits an event, then contract a needs to add contract B as a referenced contract.
      *
      * @param referencedContract
-     * @return
      */
     public DeployedContract addReferencedContract(Contract referencedContract) {
         referencedContracts.add(referencedContract);

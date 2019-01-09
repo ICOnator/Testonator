@@ -296,7 +296,6 @@ public class TestBlockchain {
     /**
      *
      * @param privateKey Private key, in the format: ea8f71fc4690e0733f3478c3d8e53790988b9e51deabd10185364bc59c58fdba
-     * @return
      */
     public static Credentials fromECPrivateKey(String privateKey) {
         return fromECKey(ECKey.fromPrivate(Hex.decode(privateKey)));

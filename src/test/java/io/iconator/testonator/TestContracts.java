@@ -63,7 +63,7 @@ public class TestContracts {
 
     @Test
     public void testManualCompile() throws IOException {
-        String contractSrc = "pragma solidity ^0.4.24;\n" +
+        String contractSrc = "pragma solidity ^0.5.1;\n" +
                 "\n" +
                 "//a comment\n" +
                 "contract Example1 {\n" +
@@ -80,7 +80,7 @@ public class TestContracts {
 
     @Test
     public void testCompile() throws IOException {
-        String contractSrc = "pragma solidity ^0.4.24;\n" +
+        String contractSrc = "pragma solidity ^0.5.1;\n" +
                 "\n" +
                 "//a comment\n" +
                 "contract Example1 {\n" +
@@ -93,7 +93,7 @@ public class TestContracts {
 
     @Test
     public void testCompileGas() throws IOException {
-        String contractSrc = "pragma solidity ^0.4.24;\n" +
+        String contractSrc = "pragma solidity ^0.5.1;\n" +
                 "\n" +
                 "contract Example2 {\n" +
                 "\tuint256 public counter;\n" +
@@ -115,7 +115,7 @@ public class TestContracts {
 
     @Test
     public void testDeploy() throws IOException, ExecutionException, InterruptedException {
-        String contractSrc = "pragma solidity ^0.4.24;\n" +
+        String contractSrc = "pragma solidity ^0.5.1;\n" +
                 "\n" +
                 "contract Exampl2 {\n" +
                 "\tuint256 public counter = 12;\n" +
@@ -159,7 +159,7 @@ public class TestContracts {
 
     @Test
     public void testCall() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException, ConvertException {
-        String contractSrc = "pragma solidity ^0.4.24;\n" +
+        String contractSrc = "pragma solidity ^0.5.1;\n" +
                 "\n" +
                 "contract Exampl2 {\n" +
                 "\tuint256 public counter = 15;\n" +
@@ -188,7 +188,7 @@ public class TestContracts {
 
     @Test
     public void testCall2() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException, ConvertException {
-        String contractSrc = "pragma solidity ^0.4.24;\n" +
+        String contractSrc = "pragma solidity ^0.5.1;\n" +
                 "\n" +
                 "contract Exampl2 {\n" +
                 "\tuint256 public counter = 15;\n" +
@@ -218,7 +218,7 @@ public class TestContracts {
     @Test
     public void testEvents() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException, ConvertException {
         start = System.currentTimeMillis();
-        String contractSrc ="pragma solidity ^0.4.24;\n" +
+        String contractSrc ="pragma solidity ^0.5.1;\n" +
                 "\n" +
                 "contract ExampleEvent {\n" +
                 "\tuint256 public counter=3;\n" +
@@ -254,15 +254,15 @@ public class TestContracts {
 
     @Test
     public void testEvents2() throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ExecutionException, InterruptedException, ConvertException {
-        String contractSrc ="pragma solidity ^0.4.24;\n" +
+        String contractSrc ="pragma solidity ^0.5.1;\n" +
                 "contract ExampleEvent {\n" +
                 "\tuint256 public counter=3;\n" +
                 "\tevent Transfer(address indexed, address indexed, uint256);\n" +
-                "\tfunction mint(address[] _recipients, uint256[] _amounts) public {\n" +
+                "\tfunction mint(address[] memory _recipients, uint256[] memory _amounts) public {\n" +
                 "\t    for (uint8 i = 0; i < _recipients.length; i++) {\n" +
                 "            address recipient = _recipients[i];\n" +
                 "            uint256 amount = _amounts[i];\n" +
-                "            emit Transfer(0, recipient, amount);\n" +
+                "            emit Transfer(address(0), recipient, amount);\n" +
                 "\t    }\n" +
                 "\t}\n" +
                 "}";
@@ -294,7 +294,7 @@ public class TestContracts {
     public void testArrays() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ConvertException {
         String contractSrc = "contract Example2 {\n" +
                 "uint8 public result;\n" +
-                "    function mint(uint8[] numbers) public {\n" +
+                "    function mint(uint8[] memory numbers) public {\n" +
                 "        for(uint8 i = 0;i<numbers.length;i++) {\n" +
                 "            result += numbers[i];\n" +
                 "        }\n" +
@@ -316,7 +316,7 @@ public class TestContracts {
 
     @Test
     public void testLibrary() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ConvertException {
-        String contractSrc1 = "pragma solidity ^0.4.24;\n" +
+        String contractSrc1 = "pragma solidity ^0.5.1;\n" +
                 "import \"./LibraryTest.sol\";\n" +
                 "contract LibImport {\n" +
                 "    using LibTest for uint256;\n" +
@@ -330,9 +330,9 @@ public class TestContracts {
         libImportFile.toFile().deleteOnExit();
         Files.write(libImportFile, contractSrc1.getBytes());
 
-        String contractSrc2 = "pragma solidity ^0.4.24;\n" +
+        String contractSrc2 = "pragma solidity ^0.5.1;\n" +
                 "library LibTest {\n" +
-                "    function test(uint256 a) pure returns (uint256) {\n" +
+                "    function test(uint256 a) internal pure returns (uint256) {\n" +
                 "        return 42;\n" +
                 "    }\n" +
                 "}";
@@ -348,7 +348,7 @@ public class TestContracts {
 
     @Test
     public void testLibrary2() throws IOException, ExecutionException, InterruptedException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ConvertException {
-        String contractSrc1 = "pragma solidity ^0.4.24;\n" +
+        String contractSrc1 = "pragma solidity ^0.5.1;\n" +
                 "import \"./LibraryTest.sol\";\n" +
                 "contract LibImport {\n" +
                 "    function testMe() public view returns (uint256) {\n" +
@@ -360,9 +360,9 @@ public class TestContracts {
         libImportFile.toFile().deleteOnExit();
         Files.write(libImportFile, contractSrc1.getBytes());
 
-        String contractSrc2 = "pragma solidity ^0.4.24;\n" +
+        String contractSrc2 = "pragma solidity ^0.5.1;\n" +
                 "library LibTest {\n" +
-                "    function test(uint256 a) pure returns (uint256) {\n" +
+                "    function test(uint256 a) internal pure returns (uint256) {\n" +
                 "        return 42;\n" +
                 "    }\n" +
                 "}";

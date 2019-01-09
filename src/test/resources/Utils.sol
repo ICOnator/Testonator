@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.1;
 
 
 library Utils {
@@ -36,15 +36,15 @@ library Utils {
      * @param _nonce uint256 Presigned transaction number.
      */
     function transferAndCallPreSignedHashing(address _token, address _to, uint256 _value, uint256 _fee,
-        uint256 _nonce, bytes4 _methodName, bytes _args) internal pure returns (bytes32) {
+        uint256 _nonce, bytes4 _methodName, bytes memory _args) internal pure returns (bytes32) {
         /* "38980f82": transferAndCallPreSignedHashing(address,address,uint256,uint256,uint256,bytes4,bytes) */
-        return keccak256(bytes4(0x38980f82), _token, _to, _value, _fee, _nonce, _methodName, _args);
+        return keccak256(abi.encodePacked(bytes4(0x38980f82), _token, _to, _value, _fee, _nonce, _methodName, _args));
     }
 
     function transferPreSignedHashing(address _token, address _to, uint256 _value, uint256 _fee,
         uint256 _nonce) internal pure returns (bytes32) {
         /* "48664c16": transferPreSignedHashing(address,address,address,uint256,uint256,uint256) */
-        return keccak256(bytes4(0x48664c16), _token, _to, _value, _fee, _nonce);
+        return keccak256(abi.encodePacked(bytes4(0x48664c16), _token, _to, _value, _fee, _nonce));
     }
 
     /**
@@ -52,7 +52,7 @@ library Utils {
     * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
     * @param sig bytes signature, the signature is generated using web3.eth.sign()
     */
-    function recover(bytes32 hash, bytes sig) internal pure returns (address) {
+    function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
         bytes32 r;
         bytes32 s;
         uint8 v;

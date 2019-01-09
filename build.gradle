@@ -5,6 +5,10 @@ plugins {
     id 'maven-publish'
 }
 
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -16,13 +20,9 @@ publishing {
     }
 }
 
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-}
-
 group 'io.iconator'
 archivesBaseName = 'testonator'
-version '1.0.30'
+version '1.0.31'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -36,8 +36,8 @@ repositories {
 }
 
 dependencies {
-    compile 'org.ethereum:ethereumj-core:1.9.0-RELEASE'
-    compile 'org.ethereum:solcJ-all:0.4.25'
+    compile 'org.ethereum:ethereumj-core:1.10.0-RELEASE'
+    compile 'org.ethereum:solcJ-all:0.5.2'
     compile 'com.github.briandilley.jsonrpc4j:jsonrpc4j:1.5.3'
     compile 'commons-io:commons-io:2.6'
     compile 'org.web3j:core:3.6.0'
