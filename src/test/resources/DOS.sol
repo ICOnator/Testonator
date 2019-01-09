@@ -190,7 +190,7 @@ contract DOS is ERC20, ERC865Plus677ish {
     }
 
     function doTransfer(address _from, address _to, uint256 _value, uint256 _fee, address _feeAddress) internal {
-        require(isTransferEnabaled());
+        require(isTransferEnabled());
         require(_to != address(0));
         uint256 total = _value.add(_fee);
         require(mintingDone);
