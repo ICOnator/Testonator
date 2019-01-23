@@ -1,4 +1,4 @@
-pragma solidity ^0.5.1;
+pragma solidity ^0.5.2;
 
 
 library Utils {
@@ -47,14 +47,20 @@ library Utils {
         return keccak256(abi.encodePacked(bytes4(0x48664c16), _token, _to, _value, _fee, _nonce));
     }
 
+    //From: https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/cryptography/ECDSA.sol
+    //adapted due to:
+
     /**
     * @notice Recover signer address from a message by using his signature
     * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
     * @param sig bytes signature, the signature is generated using web3.eth.sign()
     */
     function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
+        //r is computed as the X coordinate of a point R, modulo the curve order n.
         bytes32 r;
+        //s is (hash+rdA) / random number
         bytes32 s;
+        //v is used for public key recovery: https://bitcoin.stackexchange.com/questions/38351/ecdsa-v-r-s-what-is-v
         uint8 v;
 
         //Check the signature length
@@ -69,12 +75,9 @@ library Utils {
             v := byte(0, mload(add(sig, 96)))
         }
 
-        // Version of signature should be 27 or 28, but 0 and 1 are also possible versions
-        if (v < 27) {
-            v += 27;
-        }
-
         // If the version is correct return the signer address
+        // see
+        // https://github.com/ethereum/go-ethereum/blob/master/core/types/transaction_signing.go#L195
         if (v != 27 && v != 28) {
             return (address(0));
         } else {
