@@ -132,7 +132,7 @@ contract DOS is ERC20, ERC865Plus677ish {
     }
 
     /**
-     * @param _sixMonthCliff: number of a six month cliff. E.g., 1 is for 6 month, 2 is for 12 month, 3 is for 18 month, etc.
+     * @param _sixMonthCliff Number of a six month cliff. E.g., 1 is for 6 month, 2 is for 12 month, 3 is for 18 month, etc.
      */
     function lockTokens(address[] memory _holders, uint256[] memory _sixMonthCliff) public {
         require(owner == msg.sender);
