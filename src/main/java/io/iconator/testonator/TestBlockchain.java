@@ -405,7 +405,7 @@ public class TestBlockchain {
     }
 
     public void setTime(int timeSeconds) {
-        standaloneBlockchain.withCurrentTime(new Date(timeSeconds * 1000));
+        standaloneBlockchain.withCurrentTime(new Date(timeSeconds * 1000l));
         standaloneBlockchain.createBlock();
         //BlockchainImpl b = standaloneBlockchain.getBlockchain();
         //Block bl = b.createNewBlock(b.getBestBlock(), Collections.<org.ethereum.core.Transaction>emptyList(), Collections.<BlockHeader>emptyList(), timeSeconds);

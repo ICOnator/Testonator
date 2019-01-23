@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -519,9 +520,11 @@ public class TestERC20 {
 
         List<String> addresses = new ArrayList<>(1);
         List<BigInteger> values = new ArrayList<>(1);
+        List<BigInteger> timeouts = new ArrayList<>(1);
 
         addresses.add(CREDENTIAL_5.getAddress());
         values.add(BigInteger.valueOf(2222));
+        timeouts.add(BigInteger.valueOf(2));
 
         List<Event> events = blockchain.call(deployed,
                 new FunctionBuilder("mint").addInput("address[]", addresses)
@@ -529,12 +532,12 @@ public class TestERC20 {
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("lockTokens").addInput("address[]", addresses)
-                        .addInput("uint256[]", values));
+                        .addInput("uint256[]", timeouts));
 
         Assert.assertEquals(1, events.size());
         Assert.assertEquals("TokensLocked", events.get(0).name());
         Assert.assertEquals(CREDENTIAL_5.getAddress(), events.get(0).values().get(0).getValue().toString());
-        Assert.assertEquals("2222", events.get(0).values().get(1).getValue().toString());
+        Assert.assertEquals(""+((60*60*24*30*6*2) + 52), events.get(0).values().get(1).getValue().toString());
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("setAdmin").addInput("address", TestBlockchain.CREDENTIAL_1.getAddress())
@@ -606,9 +609,11 @@ public class TestERC20 {
 
         List<String> addresses = new ArrayList<>(1);
         List<BigInteger> values = new ArrayList<>(1);
+        List<BigInteger> timeouts = new ArrayList<>(1);
 
         addresses.add(CREDENTIAL_5.getAddress());
         values.add(BigInteger.valueOf(2222));
+        timeouts.add(BigInteger.valueOf(1));
 
         List<Event> events = blockchain.call(deployed,
                 new FunctionBuilder("mint").addInput("address[]", addresses)
@@ -616,7 +621,7 @@ public class TestERC20 {
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("lockTokens").addInput("address[]", addresses)
-                        .addInput("uint256[]", values));
+                        .addInput("uint256[]", timeouts));
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("setAdmin").addInput("address", TestBlockchain.CREDENTIAL_1.getAddress())
@@ -626,7 +631,7 @@ public class TestERC20 {
                 new FunctionBuilder("finishMinting"));
         Assert.assertEquals(0, events.size());
 
-        blockchain.setTime(2222);
+        blockchain.setTime((60 * 60 * 24 * 30 * 6) + 26);
 
         events = blockchain.call(CREDENTIAL_5, deployed,
                 new FunctionBuilder("transfer")
