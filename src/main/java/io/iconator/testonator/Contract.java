@@ -9,6 +9,7 @@ import java.util.List;
 public class Contract {
 
     final private EthCompileSolidity.Code code;
+    private String encodedConstructor = "";
     final private List<CallTransaction.Function> functions = new ArrayList<>();
 
     public Contract(EthCompileSolidity.Code code) {
@@ -18,6 +19,15 @@ public class Contract {
     public Contract addFunction(CallTransaction.Function function) {
         functions.add(function);
         return this;
+    }
+
+    public Contract constructor(Cb cb) {
+        this.encodedConstructor = cb.build();
+        return this;
+    }
+
+    public String constructor() {
+        return encodedConstructor;
     }
 
     public EthCompileSolidity.Code code() {

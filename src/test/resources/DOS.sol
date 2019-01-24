@@ -307,7 +307,7 @@ contract DOS is ERC20, ERC865Plus677ish {
         // call receiver
         require(Utils.isContract(_to));
 
-        (bool success, bytes memory data) = _to.call(abi.encodePacked(_methodName, msg.sender, _value, _args));
+        (bool success, bytes memory data) = _to.call(abi.encodePacked(abi.encodeWithSelector(_methodName, msg.sender, _value), _args));
         require(success);
         return data;
     }
@@ -351,7 +351,7 @@ contract DOS is ERC20, ERC865Plus677ish {
         require(Utils.isContract(_to));
 
         //call on behalf of from and not msg.sender
-        (bool success, bytes memory data) = _to.call(abi.encodePacked(_methodName, from, _value, _args));
+        (bool success, bytes memory data) = _to.call(abi.encodePacked(abi.encodeWithSelector(_methodName, from, _value), _args));
         require(success);
         return data;
     }

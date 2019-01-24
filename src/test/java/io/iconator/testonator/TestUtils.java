@@ -21,6 +21,7 @@ public class TestUtils {
 
     private static Map<String, Contract> contracts = null;
     private static Map<String, Contract> contractsSnapshot = null;
+    private static Map<String, Contract> contractsTransferAndCall = null;
 
     public static Map<String, Contract> setup() throws Exception {
         if(contracts != null) {
@@ -30,7 +31,7 @@ public class TestUtils {
         File contractFile2 = Paths.get(ClassLoader.getSystemResource("Utils.sol").toURI()).toFile();
         File contractFile3 = Paths.get(ClassLoader.getSystemResource("DOS.sol").toURI()).toFile();
         Map<String, Contract> contracts = compile(contractFile3, contractFile1, contractFile2);
-        Assert.assertEquals(5, contracts.size()); //DOS.sol has 3 (ERC20, DOS, ERC865Plus677ish), plus the other 3 are 6
+        Assert.assertEquals(5, contracts.size()); //DOS.sol has 3 (ERC20, DOS, ERC865Plus677ish), plus the other 2 are 5
         for(String name:contracts.keySet()) {
             System.out.println("Available contract names: " + name);
         }
@@ -52,6 +53,25 @@ public class TestUtils {
         }
         TestUtils.contractsSnapshot = contracts;
         return contractsSnapshot;
+    }
+
+    public static Map<String, Contract> setupTransferAndCall() throws Exception {
+        if(contractsTransferAndCall != null) {
+            return contractsTransferAndCall;
+        }
+        File contractFile1 = Paths.get(ClassLoader.getSystemResource("SafeMath.sol").toURI()).toFile();
+        File contractFile2 = Paths.get(ClassLoader.getSystemResource("Utils.sol").toURI()).toFile();
+        File contractFile3 = Paths.get(ClassLoader.getSystemResource("DOS.sol").toURI()).toFile();
+        Map<String, Contract> contracts = compile(contractFile3, contractFile1, contractFile2);
+        Assert.assertEquals(5, contracts.size()); //DOS.sol has 3 (ERC20, DOS, ERC865Plus677ish), plus the other 2 are 5
+        File contractFile4 = Paths.get(ClassLoader.getSystemResource("TransferVoting.sol").toURI()).toFile();
+        contracts.putAll(compile(contractFile4));
+
+        for(String name:contracts.keySet()) {
+            System.out.println("Available contract names: " + name);
+        }
+        TestUtils.contractsTransferAndCall = contracts;
+        return contractsTransferAndCall;
     }
 
     public static void mint(TestBlockchain blockchain, DeployedContract deployed, String address1, String address2, String address3, int value1, int value2, int value3) throws NoSuchMethodException, InterruptedException, ExecutionException, InstantiationException, ConvertException, IllegalAccessException, InvocationTargetException, IOException {
@@ -83,8 +103,9 @@ public class TestUtils {
         }
 
         List<Event> events = blockchain.call(deployed,
-                new FunctionBuilder("mint").addInput("address[]", addresses)
-                        .addInput("uint256[]", values));
+                Fb.name("mint")
+                        .input("address[]", addresses)
+                        .input("uint256[]", values));
 
         Assert.assertEquals(counter, events.size());
         if(value1 > 0) {
@@ -92,15 +113,15 @@ public class TestUtils {
         }
 
         events = blockchain.call(deployed,
-                new FunctionBuilder("setAdmin").addInput("address", TestBlockchain.CREDENTIAL_1.getAddress())
-                        .addInput("address", TestBlockchain.CREDENTIAL_2.getAddress()));
+                Fb.name("setAdmin")
+                        .input("address", TestBlockchain.CREDENTIAL_1.getAddress())
+                        .input("address", TestBlockchain.CREDENTIAL_2.getAddress()));
 
         if(setFlag) {
-            events = blockchain.call(deployed,
-                    new FunctionBuilder("finishMinting"));
+            events = blockchain.call(deployed, Fb.name("finishMinting"));
             Assert.assertEquals(0, events.size());
 
-            List<Type> result = blockchain.callConstant(deployed, new FunctionBuilder("mintingDone").outputs("bool"));
+            List<Type> result = blockchain.callConstant(deployed, Fb.name("mintingDone").output("bool"));
             Assert.assertEquals("true", result.get(0).getValue().toString());
         }
 

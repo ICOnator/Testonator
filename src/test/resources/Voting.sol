@@ -7,7 +7,7 @@ contract ERC20ish {
 contract Voting {
     ERC20ish public shareContract;
 
-    uint64 public untilBlock = 8;
+    uint64 public untilBlock = 7;
 
     uint256 public yay = 0;
     uint256 public nay = 0;
@@ -16,9 +16,13 @@ contract Voting {
 
     event Voted(address indexed from, uint256 value, bool vote);
 
-    function set(address _shareContract) public {
+    constructor(address _shareContract) public {
         //hardcode this
         shareContract = ERC20ish(_shareContract);
+    }
+
+    function getAddress() public returns (address) {
+        return address(shareContract);
     }
 
     function vote(bool vote) public {

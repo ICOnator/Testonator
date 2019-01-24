@@ -315,12 +315,12 @@ public class TestBlockchain {
         return callConstant(contract.from() == null? contract.owner() : contract.from(), contract.contractAddress(), function);
     }
 
-    public List<Type> callConstant(Credentials credential, String contractAddress, FunctionBuilder functionBuilder) throws InterruptedException, ExecutionException, IOException {
-        return callConstant(credential, contractAddress, functionBuilder.build());
+    public List<Type> callConstant(Credentials credential, String contractAddress, Builder builder) throws InterruptedException, ExecutionException, IOException {
+        return callConstant(credential, contractAddress, builder.build());
     }
 
-    public List<Type> callConstant(DeployedContract contract, FunctionBuilder functionBuilder) throws InterruptedException, ExecutionException, IOException {
-        return callConstant(contract.from() == null? contract.owner() : contract.from(), contract.contractAddress(), functionBuilder.build());
+    public List<Type> callConstant(DeployedContract contract, Builder builder) throws InterruptedException, ExecutionException, IOException {
+        return callConstant(contract.from() == null? contract.owner() : contract.from(), contract.contractAddress(), builder.build());
     }
 
     public List<Type> callConstant(Credentials credential, String contractAddress, Function function)
@@ -365,19 +365,19 @@ public class TestBlockchain {
         return call(credential, contract, weiValue, (Function) null);
     }
 
-    public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue, FunctionBuilder functionBuilder)
+    public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue, Builder builder)
             throws IOException, ExecutionException, InterruptedException {
-        return call(credential, contract, weiValue, functionBuilder.build());
+        return call(credential, contract, weiValue, builder.build());
     }
 
-    public List<Event> call(Credentials credential, DeployedContract contract, FunctionBuilder functionBuilder)
+    public List<Event> call(Credentials credential, DeployedContract contract, Builder builder)
             throws IOException, ExecutionException, InterruptedException {
-        return call(credential, contract, BigInteger.ZERO, functionBuilder.build());
+        return call(credential, contract, BigInteger.ZERO, builder.build());
     }
 
-    public List<Event> call(DeployedContract contract, FunctionBuilder functionBuilder)
+    public List<Event> call(DeployedContract contract, Builder builder)
             throws IOException, ExecutionException, InterruptedException {
-        return call(contract.from() == null? contract.owner() : contract.from(), contract, BigInteger.ZERO, functionBuilder.build());
+        return call(contract.from() == null? contract.owner() : contract.from(), contract, BigInteger.ZERO, builder.build());
     }
 
     public List<Event> call(Credentials credential, DeployedContract contract, BigInteger weiValue, Function function) throws IOException, ExecutionException, InterruptedException {
@@ -389,19 +389,19 @@ public class TestBlockchain {
         return call(credential, contract.contractAddress(), contracts, weiValue, function);
     }
 
-    public List<Event> call(Credentials credential, String contractAddress, FunctionBuilder functionBuilder)
+    public List<Event> call(Credentials credential, String contractAddress, Builder builder)
             throws IOException, ExecutionException, InterruptedException {
-        return call(credential, contractAddress, new ArrayList<>(), BigInteger.ZERO, functionBuilder.build());
+        return call(credential, contractAddress, new ArrayList<>(), BigInteger.ZERO, builder.build());
     }
 
-    public List<Event> call(Credentials credential, String contractAddress, BigInteger weiValue, FunctionBuilder functionBuilder)
+    public List<Event> call(Credentials credential, String contractAddress, BigInteger weiValue, Builder builder)
             throws IOException, ExecutionException, InterruptedException {
-        return call(credential, contractAddress, new ArrayList<>(), weiValue, functionBuilder.build());
+        return call(credential, contractAddress, new ArrayList<>(), weiValue, builder.build());
     }
 
-    public List<Event> call(Credentials credential, String contractAddress, List<Contract> contracts, BigInteger weiValue, FunctionBuilder functionBuilder)
+    public List<Event> call(Credentials credential, String contractAddress, List<Contract> contracts, BigInteger weiValue, Builder builder)
             throws IOException, ExecutionException, InterruptedException {
-        return call(credential, contractAddress, contracts, weiValue, functionBuilder.build());
+        return call(credential, contractAddress, contracts, weiValue, builder.build());
     }
 
     public void setTime(int timeSeconds) {
@@ -583,8 +583,7 @@ public class TestBlockchain {
         BigInteger nonce = nonce(credential);
         // create our transaction
         RawTransaction rawTransaction = RawTransaction.createContractTransaction(
-                nonce, gasPrice, gasLimit, value, contract.code().getCode());
-
+                nonce, gasPrice, gasLimit, value, contract.code().getCode() + contract.constructor());
         // sign & send our transaction
         byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credential);
         String hexValue = org.bouncycastle.util.encoders.Hex.toHexString(signedMessage);
@@ -592,7 +591,7 @@ public class TestBlockchain {
 
         EthSendTransaction tx = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(tx.getTransactionHash()).sendAsync().get();
-        LOG.info("Contract deployed at {}, {}", contractAddress, contract.code().getCode());
+        LOG.info("Contract deployed at {}, {}", contractAddress, contract.code().getCode() + contract.constructor());
         return new DeployedContract(tx, contractAddress, credential, receipt, contract);
     }
 

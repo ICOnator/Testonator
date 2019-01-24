@@ -8,12 +8,16 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FunctionBuilder implements Builder {
+public class Fb implements Builder {
     final private String name;
     final private List<Type> inputParameters = new ArrayList<>();
     final private List<TypeReference<?>> outputParameters = new ArrayList<>();
 
-    public FunctionBuilder(String name) {
+    public static Fb name(String name) {
+        return new Fb(name);
+    }
+
+    private Fb(String name) {
         this.name = name;
     }
 
@@ -21,13 +25,13 @@ public class FunctionBuilder implements Builder {
         return new Function(name, inputParameters, outputParameters);
     }
 
-    public FunctionBuilder addInput(String type, Object value) throws InvocationTargetException, NoSuchMethodException, InstantiationException, ConvertException, IllegalAccessException {
+    public Fb input(String type, Object value) throws InvocationTargetException, NoSuchMethodException, InstantiationException, ConvertException, IllegalAccessException {
         Type<?> t = Utils.convertTypes(type, value);
         inputParameters.add(t);
         return this;
     }
 
-    public FunctionBuilder outputs(String... types) {
+    public Fb output(String... types) {
         for(String type: types) {
             TypeReference<Type> t = Utils.getType(type);
             outputParameters.add(t);

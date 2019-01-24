@@ -26,6 +26,7 @@ library Utils {
     }
 
     //From: https://github.com/PROPSProject/props-token-distribution/blob/master/contracts/token/ERC865Token.sol
+    //adapted to: https://solidity.readthedocs.io/en/v0.5.3/050-breaking-changes.html?highlight=abi%20encode
 
     /**
      * @notice Hash (keccak256) of the payload used by transferPreSigned
