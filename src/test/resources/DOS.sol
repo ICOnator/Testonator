@@ -87,6 +87,8 @@ contract DOS is ERC20, ERC865Plus677ish {
     // minting
     bool public mintingDone = false;
 
+    //vesting variables, check dates with https://www.epochconverter.com/ and https://www.unixtimestamp.com/
+    uint256 public constant firstFeb19 = 1548979200;
     uint256 public constant sixMonth = 6 * 30 days;
 
     event TokensLocked(address indexed _holder, uint256 _timeout);
@@ -142,7 +144,7 @@ contract DOS is ERC20, ERC865Plus677ish {
 
         for (uint8 i = 0; i < _holders.length; i++) {
             address holder = _holders[i];
-            uint256 timeout = (_sixMonthCliff[i].mul(sixMonth)).add(now);
+            uint256 timeout = (_sixMonthCliff[i].mul(sixMonth)).add(firstFeb19);
 
             // make sure lockup period can not be overwritten
             require(lockups[holder] == 0);

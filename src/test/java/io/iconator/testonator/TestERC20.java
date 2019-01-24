@@ -537,7 +537,7 @@ public class TestERC20 {
         Assert.assertEquals(1, events.size());
         Assert.assertEquals("TokensLocked", events.get(0).name());
         Assert.assertEquals(CREDENTIAL_5.getAddress(), events.get(0).values().get(0).getValue().toString());
-        Assert.assertEquals(""+((60*60*24*30*6*2) + 52), events.get(0).values().get(1).getValue().toString());
+        Assert.assertEquals(""+((60*60*24*30*6*2) + 1548979200), events.get(0).values().get(1).getValue().toString());
 
         events = blockchain.call(deployed,
                 new FunctionBuilder("setAdmin").addInput("address", TestBlockchain.CREDENTIAL_1.getAddress())
@@ -631,8 +631,17 @@ public class TestERC20 {
                 new FunctionBuilder("finishMinting"));
         Assert.assertEquals(0, events.size());
 
-        blockchain.setTime((60 * 60 * 24 * 30 * 6) + 26);
+        blockchain.setTime((60 * 60 * 24 * 30 * 6) + (1548979200 - 27));
 
+        events = blockchain.call(CREDENTIAL_5, deployed,
+                new FunctionBuilder("transfer")
+                        .addInput("address", CREDENTIAL_1.getAddress())
+                        .addInput("uint256", new BigInteger("2222"))
+                        .outputs("bool"));
+
+        Assert.assertNull(events);
+
+        blockchain.setTime((60 * 60 * 24 * 30 * 6) + (1548979200 - 26)); //26 is 2x13, the time increment
         events = blockchain.call(CREDENTIAL_5, deployed,
                 new FunctionBuilder("transfer")
                         .addInput("address", CREDENTIAL_1.getAddress())
