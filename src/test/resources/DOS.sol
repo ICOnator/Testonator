@@ -1,4 +1,3 @@
-//use always the latest version, which contains latest bugfixes
 pragma solidity ^0.5.2;
 
 import "./SafeMath.sol";
@@ -23,19 +22,23 @@ contract ERC20 {
  * We deviate from the specification and we don't define a tokenfallback. That means
  * tranferAndCall can specify the function to call (bytes4(sha3("setN(uint256)")))
  * and its arguments, and the respective function is called.
- * TODO: find out what happens if the function is not found. Will the default function
- * be called, or will the function return false?
+ *
+ * If an invalid function is called, its default function (if implemented) is called.
  *
  * We also deviate from ERC865 and added a pre signed transaction for transferAndCall.
  */
 
 /*
- Notes on signature malleability: the signature in the array cannot be changed and still valid, as the same
- precaution as in bitcoin was used to prevent that (at least in geth):
+ Notes on signature malleability: Ethereum took the same
+ precaution as in bitcoin was used to prevent that:
 
  https://github.com/ethereum/go-ethereum/blob/master/vendor/github.com/btcsuite/btcd/btcec/signature.go#L48
  https://github.com/ethereum/go-ethereum/blob/master/crypto/signature_test.go
  https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
+ https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2.md
+
+ However, ecrecover still allows ambigous signatures. Thus, recover that wraps ecrecover checks for ambigous
+ signatures and only allows unique signatures.
 */
 
 contract ERC865Plus677ish {
@@ -48,12 +51,11 @@ contract ERC865Plus677ish {
         uint256 _amount, uint256 _fee, bytes4 _methodName, bytes _args);
 
     function transferPreSigned(bytes memory _signature, address _to, uint256 _value,
-        uint256 _fee) public returns (bool);
+        uint256 _fee, uint256 _nonce) public returns (bool);
     function transferAndCallPreSigned(bytes memory _signature, address _to, uint256 _value,
-        uint256 _fee, bytes4 _methodName, bytes memory _args) public returns (bytes memory);
+        uint256 _fee, uint256 _nonce, bytes4 _methodName, bytes memory _args) public returns (bytes memory);
 }
 
-//TODO: check ERC865 for latest development
 contract DOS is ERC20, ERC865Plus677ish {
     using SafeMath for uint256;
 
@@ -313,11 +315,12 @@ contract DOS is ERC20, ERC865Plus677ish {
     }
 
     //ERC 865 + delegate transfer and call
-    function transferPreSigned(bytes memory _signature, address _to, uint256 _value, uint256 _fee) public returns (bool) {
+    function transferPreSigned(bytes memory _signature, address _to, uint256 _value, uint256 _fee, uint256 _nonce) public returns (bool) {
 
-        bytes32 hashedTx = Utils.transferPreSignedHashing(address(this), _to, _value, _fee);
-        (address from, bytes memory signature) = Utils.recover(hashedTx, _signature);
-        require(!signatures[signature]);
+        require(!signatures[_signature]);
+        bytes32 hashedTx = Utils.transferPreSignedHashing(address(this), _to, _value, _fee, _nonce);
+        address from = Utils.recover(hashedTx, _signature);
+
         require(from != address(0));
 
         doTransfer(from, _to, _value, _fee, msg.sender);
@@ -329,12 +332,13 @@ contract DOS is ERC20, ERC865Plus677ish {
         return true;
     }
 
-    function transferAndCallPreSigned(bytes memory _signature, address _to, uint256 _value, uint256 _fee,
+    function transferAndCallPreSigned(bytes memory _signature, address _to, uint256 _value, uint256 _fee, uint256 _nonce,
         bytes4 _methodName, bytes memory _args) public returns (bytes memory) {
 
-        bytes32 hashedTx = Utils.transferAndCallPreSignedHashing(address(this), _to, _value, _fee, _methodName, _args);
-        (address from, bytes memory signature) = Utils.recover(hashedTx, _signature);
-        require(!signatures[signature]);
+        require(!signatures[_signature]);
+        bytes32 hashedTx = Utils.transferAndCallPreSignedHashing(address(this), _to, _value, _fee, _nonce, _methodName, _args);
+        address from = Utils.recover(hashedTx, _signature);
+
         require(from != address(0));
 
         doTransfer(from, _to, _value, _fee, msg.sender);

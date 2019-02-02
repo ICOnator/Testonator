@@ -23,6 +23,7 @@ contract Inventory {
         owner = msg.sender;
     }
 
+    //itemize(address,uint256,string,string) -> 5c28b451
     function itemize(address _from, uint256 _value, string memory _serialNumber, string memory _description) public {
         require(msg.sender == address(shareContract)); //needs to be the DOS contract
         require(_value == 1); //don't care about safe math
@@ -31,19 +32,20 @@ contract Inventory {
         emit Itemized(_serialNumber, _description);
     }
 
+    function itemLength(address _addr) public view returns (uint256) {
+        return inventory[_addr].length;
+    }
+
+    function itemSerialAt(address _addr, uint256 _index) public view returns (string memory) {
+        return inventory[_addr][_index].serialNumber;
+    }
+
+    function itemDescriptionAt(address _addr, uint256 _index) public view returns (string memory) {
+        return inventory[_addr][_index].description;
+    }
+
     function payout(address _to) public {
-        require(msg.sender == address(shareContract)); //needs to be the DOS contract
         require(msg.sender == owner);
         shareContract.transfer(_to, amount);
-    }
-
-    function transferPreSignedHashing(address _token, address _to, uint256 _value, uint256 _fee) public pure returns (bytes32) {
-        /* "5c4b4c12": transferPreSignedHashing(address,address,uint256,uint256) */
-        return keccak256(abi.encodePacked(bytes4(0x5c4b4c12), _token, _to, _value, _fee));
-    }
-
-    function transferPreSigned(address _token, address _to, uint256 _value, uint256 _fee) public pure returns (bytes memory) {
-        /* "5c4b4c12": transferPreSignedHashing(address,address,uint256,uint256) */
-        return abi.encode(bytes4(0x5c4b4c12), _token, _to, _value, _fee);
     }
 }
