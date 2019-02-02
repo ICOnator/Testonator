@@ -22,7 +22,7 @@ publishing {
 
 group 'io.iconator'
 archivesBaseName = 'testonator'
-version '1.0.31'
+version '1.0.32'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
