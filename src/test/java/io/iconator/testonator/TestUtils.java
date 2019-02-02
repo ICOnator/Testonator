@@ -55,25 +55,6 @@ public class TestUtils {
         return contractsSnapshot;
     }
 
-    public static Map<String, Contract> setupTransferAndCall() throws Exception {
-        if(contractsTransferAndCall != null) {
-            return contractsTransferAndCall;
-        }
-        File contractFile1 = Paths.get(ClassLoader.getSystemResource("SafeMath.sol").toURI()).toFile();
-        File contractFile2 = Paths.get(ClassLoader.getSystemResource("Utils.sol").toURI()).toFile();
-        File contractFile3 = Paths.get(ClassLoader.getSystemResource("DOS.sol").toURI()).toFile();
-        Map<String, Contract> contracts = compile(contractFile3, contractFile1, contractFile2);
-        Assert.assertEquals(5, contracts.size()); //DOS.sol has 3 (ERC20, DOS, ERC865Plus677ish), plus the other 2 are 5
-        File contractFile4 = Paths.get(ClassLoader.getSystemResource("TransferVoting.sol").toURI()).toFile();
-        contracts.putAll(compile(contractFile4));
-
-        for(String name:contracts.keySet()) {
-            System.out.println("Available contract names: " + name);
-        }
-        TestUtils.contractsTransferAndCall = contracts;
-        return contractsTransferAndCall;
-    }
-
     public static void mint(TestBlockchain blockchain, DeployedContract deployed, String address1, String address2, String address3, int value1, int value2, int value3) throws NoSuchMethodException, InterruptedException, ExecutionException, InstantiationException, ConvertException, IllegalAccessException, InvocationTargetException, IOException {
         mint(blockchain, deployed, address1, address2, address3, value1, value2, value3, true);
     }

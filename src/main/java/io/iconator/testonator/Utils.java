@@ -90,7 +90,7 @@ public class Utils {
                                     + param.getClass());
                 }
             } else if (type.startsWith("bytes")) {
-                if (!(param instanceof byte[])) {
+                if (!(param instanceof byte[] || param instanceof String)) {
                     throw new ConvertException(
                             "expected byte[] for bytes*, but got "
                                     + param.getClass());
@@ -124,6 +124,8 @@ public class Utils {
                 return (Type<?>) c.getDeclaredConstructor(long.class).newInstance(((Long) param).longValue());
             } else if (param instanceof Boolean) {
                 return (Type<?>) c.getDeclaredConstructor(boolean.class).newInstance(((Boolean) param).booleanValue());
+            } else if (param instanceof String && type.startsWith("bytes")) {
+                return (Type<?>) c.getDeclaredConstructor(byte[].class).newInstance(Numeric.hexStringToByteArray((String)param));
             } else {
                 return (Type<?>) c.getDeclaredConstructor(param.getClass()).newInstance(param);
             }

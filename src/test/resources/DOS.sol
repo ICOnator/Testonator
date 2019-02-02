@@ -48,9 +48,9 @@ contract ERC865Plus677ish {
         uint256 _amount, uint256 _fee, bytes4 _methodName, bytes _args);
 
     function transferPreSigned(bytes memory _signature, address _to, uint256 _value,
-        uint256 _fee, uint256 _nonce) public returns (bool);
+        uint256 _fee) public returns (bool);
     function transferAndCallPreSigned(bytes memory _signature, address _to, uint256 _value,
-        uint256 _fee, uint256 _nonce, bytes4 _methodName, bytes memory _args) public returns (bytes memory);
+        uint256 _fee, bytes4 _methodName, bytes memory _args) public returns (bytes memory);
 }
 
 //TODO: check ERC865 for latest development
@@ -313,13 +313,11 @@ contract DOS is ERC20, ERC865Plus677ish {
     }
 
     //ERC 865 + delegate transfer and call
-    function transferPreSigned(bytes memory _signature, address _to, uint256 _value, uint256 _fee,
-        uint256 _nonce) public returns (bool) {
+    function transferPreSigned(bytes memory _signature, address _to, uint256 _value, uint256 _fee) public returns (bool) {
 
-        require(!signatures[_signature]);
-
-        bytes32 hashedTx = Utils.transferPreSignedHashing(address(this), _to, _value, _fee, _nonce);
-        address from = Utils.recover(hashedTx, _signature);
+        bytes32 hashedTx = Utils.transferPreSignedHashing(address(this), _to, _value, _fee);
+        (address from, bytes memory signature) = Utils.recover(hashedTx, _signature);
+        require(!signatures[signature]);
         require(from != address(0));
 
         doTransfer(from, _to, _value, _fee, msg.sender);
@@ -331,13 +329,12 @@ contract DOS is ERC20, ERC865Plus677ish {
         return true;
     }
 
-    function transferAndCallPreSigned(bytes memory _signature, address _to, uint256 _value, uint256 _fee, uint256 _nonce,
+    function transferAndCallPreSigned(bytes memory _signature, address _to, uint256 _value, uint256 _fee,
         bytes4 _methodName, bytes memory _args) public returns (bytes memory) {
 
-        require(!signatures[_signature]);
-
-        bytes32 hashedTx = Utils.transferAndCallPreSignedHashing(address(this), _to, _value, _fee, _nonce, _methodName, _args);
-        address from = Utils.recover(hashedTx, _signature);
+        bytes32 hashedTx = Utils.transferAndCallPreSignedHashing(address(this), _to, _value, _fee, _methodName, _args);
+        (address from, bytes memory signature) = Utils.recover(hashedTx, _signature);
+        require(!signatures[signature]);
         require(from != address(0));
 
         doTransfer(from, _to, _value, _fee, msg.sender);

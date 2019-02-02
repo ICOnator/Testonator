@@ -1,6 +1,5 @@
 pragma solidity ^0.5.2;
 
-
 library Utils {
 
     //From: https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/AddressUtils.sol
@@ -34,18 +33,17 @@ library Utils {
      * @param _to address The address which you want to transfer to.
      * @param _value uint256 The amount of tokens to be transferred.
      * @param _fee uint256 The amount of tokens paid to msg.sender, by the owner.
-     * @param _nonce uint256 Presigned transaction number.
      */
     function transferAndCallPreSignedHashing(address _token, address _to, uint256 _value, uint256 _fee,
-        uint256 _nonce, bytes4 _methodName, bytes memory _args) internal pure returns (bytes32) {
-        /* "38980f82": transferAndCallPreSignedHashing(address,address,uint256,uint256,uint256,bytes4,bytes) */
-        return keccak256(abi.encodePacked(bytes4(0x38980f82), _token, _to, _value, _fee, _nonce, _methodName, _args));
+        bytes4 _methodName, bytes memory _args) internal pure returns (bytes32) {
+        /* "93f741b2": transferAndCallPreSignedHashing(address,address,uint256,uint256,,bytes4,bytes) */
+        return keccak256(abi.encodePacked(bytes4(0x93f741b2), _token, _to, _value, _fee, _methodName, _args));
     }
 
-    function transferPreSignedHashing(address _token, address _to, uint256 _value, uint256 _fee,
-        uint256 _nonce) internal pure returns (bytes32) {
-        /* "48664c16": transferPreSignedHashing(address,address,address,uint256,uint256,uint256) */
-        return keccak256(abi.encodePacked(bytes4(0x48664c16), _token, _to, _value, _fee, _nonce));
+    function transferPreSignedHashing(address _token, address _to, uint256 _value, uint256 _fee)
+    internal pure returns (bytes32) {
+        /* "5c4b4c12": transferPreSignedHashing(address,address,uint256,uint256) */
+        return keccak256(abi.encodePacked(bytes4(0x5c4b4c12), _token, _to, _value, _fee));
     }
 
     //From: https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/cryptography/ECDSA.sol
@@ -56,7 +54,7 @@ library Utils {
     * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
     * @param sig bytes signature, the signature is generated using web3.eth.sign()
     */
-    function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
+    function recover(bytes32 hash, bytes memory sig) internal pure returns (address, bytes memory) {
         //r is computed as the X coordinate of a point R, modulo the curve order n.
         bytes32 r;
         //s is (hash+rdA) / random number
@@ -66,7 +64,7 @@ library Utils {
 
         //Check the signature length
         if (sig.length != 65) {
-            return (address(0));
+            return (address(0), '');
         }
 
         // Divide the signature in r, s and v variables
@@ -76,13 +74,27 @@ library Utils {
             v := byte(0, mload(add(sig, 96)))
         }
 
+        //EIP-2 still allows signature malleabality, remove this possibility
+        //TODO: check this
+        uint256 sx = uint256(s);
+        if(sx > uint256(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0)) {
+            return (address(0), '');
+            //sx = uint256(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141) - sx;
+        }
+
+        bytes memory normalizedSignature = abi.encode(r, sx);
+
+        //removed the possibility of 0/1 in the signature, see:
+        //https://github.com/OpenZeppelin/openzeppelin-solidity/pull/1622
+        //https://github.com/ethereum/EIPs/issues/865
+
         // If the version is correct return the signer address
         // see
         // https://github.com/ethereum/go-ethereum/blob/master/core/types/transaction_signing.go#L195
         if (v != 27 && v != 28) {
-            return (address(0));
+            return (address(0), '');
         } else {
-            return ecrecover(hash, v, r, s);
+            return (ecrecover(hash, v, r, s), normalizedSignature);
         }
     }
 }
