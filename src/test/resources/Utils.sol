@@ -49,46 +49,48 @@ library Utils {
     //From: https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/cryptography/ECDSA.sol
 
     /**
-    * @notice Recover signer address from a message by using his signature
-    * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
-    * @param sig bytes signature, the signature is generated using web3.eth.sign()
-    */
-    function recover(bytes32 hash, bytes memory sig) internal pure returns (address) {
-        //r is computed as the X coordinate of a point R, modulo the curve order n.
-        bytes32 r;
-        //s is (hash+rdA) / random number
-        bytes32 s;
-        //v is used for public key recovery: https://bitcoin.stackexchange.com/questions/38351/ecdsa-v-r-s-what-is-v
-        uint8 v;
-
-        //Check the signature length
-        if (sig.length != 65) {
-            return address(0);
+     * @dev Recover signer address from a message by using their signature
+     * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
+     * @param signature bytes signature, the signature is generated using web3.eth.sign()
+     */
+    function recover(bytes32 hash, bytes memory signature) internal pure returns (address) {
+        // Check the signature length
+        if (signature.length != 65) {
+            return (address(0));
         }
 
         // Divide the signature in r, s and v variables
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+
+        // ecrecover takes the signature parameters, and the only way to get them
+        // currently is to use assembly.
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-            r := mload(add(sig, 32))
-            s := mload(add(sig, 64))
-            v := byte(0, mload(add(sig, 96)))
+            r := mload(add(signature, 0x20))
+            s := mload(add(signature, 0x40))
+            v := byte(0, mload(add(signature, 0x60)))
         }
 
-        //EIP-2 still allows signature malleabality, remove this possibility
-        if(uint256(s) > uint256(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0)) {
+        // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
+        // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines
+        // the valid range for s in (281): 0 < s < secp256k1n ÷ 2 + 1, and for v in (282): v ∈ {27, 28}. Most
+        // signatures from current libraries generate a unique signature with an s-value in the lower half order.
+        //
+        // If your library generates malleable signatures, such as s-values in the upper range, calculate a new s-value
+        // with 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 - s1 and flip v from 27 to 28 or
+        // vice versa. If your library also generates signatures with 0/1 for v instead 27/28, add 27 to v to accept
+        // these malleable signatures as well.
+        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
             return address(0);
         }
 
-        //removed the possibility of 0/1 in the signature, see:
-        //https://github.com/OpenZeppelin/openzeppelin-solidity/pull/1622
-        //https://github.com/ethereum/EIPs/issues/865
-
-        // If the version is correct return the signer address
-        // see
-        // https://github.com/ethereum/go-ethereum/blob/master/core/types/transaction_signing.go#L195
         if (v != 27 && v != 28) {
             return address(0);
-        } else {
-            return ecrecover(hash, v, r, s);
         }
+
+        // If the signature is valid (and not malleable), return the signer address
+        return ecrecover(hash, v, r, s);
     }
 }
