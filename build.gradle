@@ -22,7 +22,7 @@ publishing {
 
 group 'io.iconator'
 archivesBaseName = 'testonator'
-version '1.0.33'
+version '1.0.34'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -40,9 +40,9 @@ dependencies {
     compile 'org.ethereum:solcJ-all:0.5.6'
     compile 'com.github.briandilley.jsonrpc4j:jsonrpc4j:1.5.3'
     compile 'commons-io:commons-io:2.6'
-    compile 'org.web3j:core:4.1.0'
-    compile 'org.eclipse.jetty:jetty-server:9.4.12.v20180830'
-    compile 'org.eclipse.jetty:jetty-servlet:9.4.12.v20180830'
+    compile 'org.web3j:core:4.2.0'
+    compile 'org.eclipse.jetty:jetty-server:9.4.15.v20190215'
+    compile 'org.eclipse.jetty:jetty-servlet:9.4.15.v20190215'
     compile 'javax.portlet:portlet-api:3.0.1'
 }
 

@@ -75,11 +75,20 @@ public class Utils {
                                 + param.getClass());
             }
             List<Type<?>> retVal = new ArrayList<>();
+            Class c = null;
             for(Object o:((List)param)) {
                 Type<?> value = convertTypes(type.replace("[]",""), o);
                 retVal.add(value);
+                if(c == null) {
+                    c = value.getClass();
+                } else {
+                    if(c != value.getClass()) {
+                        throw new RuntimeException("needs to be the same type, initial type was: " + c +". " +
+                                "Now we have: "+type.getClass());
+                    }
+                }
             }
-            return new DynamicArray(retVal);
+            return new DynamicArray(c, retVal);
         } else {
             Class c = AbiTypes.getType(type);
 
@@ -175,10 +184,19 @@ public class Utils {
 
     public static Type createArray(Type... types) {
         List<Type> tmp = new ArrayList<Type>(types.length);
+        Class c = null;
         for(Type type:types) {
             tmp.add(type);
+            if(c == null) {
+                c = type.getClass();
+            } else {
+                if(c != type.getClass()) {
+                    throw new RuntimeException("needs to be the same type, initial type was: " + c +". " +
+                            "Now we have: "+type.getClass());
+                }
+            }
         }
-        return new DynamicArray(tmp);
+        return new DynamicArray(c, tmp);
     }
 
     public static String functionHash(String abiSig) {

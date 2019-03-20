@@ -1,16 +1,15 @@
 package io.iconator.testonator;
 
 import org.junit.*;
+import org.web3j.abi.datatypes.Type;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import org.web3j.abi.datatypes.Type;
 
 import static io.iconator.testonator.TestBlockchain.*;
 
@@ -48,7 +47,7 @@ public class TestERC20 {
         //transfers: should transfer 10000 to accounts[1] with accounts[0] having 10000
         DeployedContract deployed = blockchain.deploy(CREDENTIAL_0, contracts.get("DOS"));
 
-        TestUtils.mint(blockchain, deployed, CREDENTIAL_0.getAddress(), CREDENTIAL_1.getAddress(), CREDENTIAL_2.getAddress(), 10000, 1000, 10, false);
+        TestUtils.mint(blockchain, deployed, CREDENTIAL_0.getAddress(), CREDENTIAL_1.getAddress(), CREDENTIAL_2.getAddress(), 10000, 1000, 10, null,false);
         List<Event> events = blockchain.call(deployed,
                 new FunctionBuilder("transfer")
                         .addInput("address", CREDENTIAL_1.getAddress())
@@ -503,11 +502,16 @@ public class TestERC20 {
                         .addInput("uint256", new BigInteger("60"))
                         .outputs("bool"));
 
-        Assert.assertEquals(1, events.size());
+        Assert.assertEquals(2, events.size());
         Assert.assertEquals("Transfer", events.get(0).name());
         Assert.assertEquals(CREDENTIAL_0.getAddress(), events.get(0).values().get(0).getValue().toString());
         Assert.assertEquals(CREDENTIAL_2.getAddress(), events.get(0).values().get(1).getValue().toString());
         Assert.assertEquals("60", events.get(0).values().get(2).getValue().toString());
+
+        Assert.assertEquals("Approval", events.get(1).name());
+        Assert.assertEquals(CREDENTIAL_0.getAddress(), events.get(1).values().get(0).getValue().toString());
+        Assert.assertEquals(CREDENTIAL_1.getAddress(), events.get(1).values().get(1).getValue().toString());
+        Assert.assertEquals(new BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639935").subtract(BigInteger.valueOf(60)).toString(), events.get(1).values().get(2).getValue().toString());
     }
 
     //********************* ERC20 Lockups
@@ -649,5 +653,28 @@ public class TestERC20 {
                         .outputs("bool"));
 
         Assert.assertEquals(1, events.size());
+    }
+
+    @Test
+    public void testTransferOwnership() throws InterruptedException, ExecutionException, IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, ConvertException, InvocationTargetException {
+        //should be able to withdraw funds after lockup expires
+
+        DeployedContract deployed = blockchain.deploy(CREDENTIAL_0, contracts.get("DOS"));
+        TestUtils.mint(blockchain, deployed, CREDENTIAL_0.getAddress(), CREDENTIAL_1.getAddress(), CREDENTIAL_2.getAddress(), 10000, 0, 0);
+
+        List<Event> events = blockchain.call(CREDENTIAL_5, deployed, "transferOwnership", CREDENTIAL_0.getAddress());
+        Assert.assertEquals(null, events);
+
+        events = blockchain.call(deployed, "transferOwnership", CREDENTIAL_1.getAddress());
+        Assert.assertEquals(null, events); //cannot be admin1
+
+        events = blockchain.call(deployed, "transferOwnership", CREDENTIAL_3.getAddress());
+        Assert.assertEquals(0, events.size());
+
+        events = blockchain.call(CREDENTIAL_3, deployed, "claimOwnership");
+        Assert.assertEquals(0, events.size());
+
+        events = blockchain.call(CREDENTIAL_3,deployed, "transferOwnership", CREDENTIAL_4.getAddress());
+        Assert.assertEquals(0, events.size());
     }
 }

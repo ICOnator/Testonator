@@ -278,7 +278,7 @@ public class TestTransferAndCallPreSigned {
     public void testTransferAndCallPreSigned() throws InterruptedException, ExecutionException, IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, ConvertException, InvocationTargetException {
         DeployedContract deployed = blockchain.deploy(CREDENTIAL_0, contracts.get("DOS"));
         DeployedContract deployedInventory = blockchain.deploy(CREDENTIAL_5, contracts.get("Inventory").constructor(Cb.constructor("address", deployed.contractAddress())));
-        TestUtils.mint(blockchain, deployed, CREDENTIAL_0.getAddress(), CREDENTIAL_1.getAddress(), CREDENTIAL_2.getAddress(), 10000, 1000, 10);
+        TestUtils.mint(blockchain, deployed, CREDENTIAL_0.getAddress(), CREDENTIAL_1.getAddress(), CREDENTIAL_2.getAddress(), 10000, 1000, 10, deployedInventory.contractAddress());
 
         //cred 1 stores entries in the Inventory contract via cred 3. cred0 gets the token and ends up with 10001
 

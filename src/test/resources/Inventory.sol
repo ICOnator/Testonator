@@ -1,4 +1,4 @@
-pragma solidity ^0.5.2;
+pragma solidity 0.5.6;
 
 contract ERC20ish {
     function transfer(address to, uint256 value) public returns (bool);

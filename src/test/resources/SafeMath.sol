@@ -1,5 +1,5 @@
 //using: https://github.com/OpenZeppelin/openzeppelin-solidity/blob/f80c65ff67957404c964af864ffb230e4cbb1cf4/contracts/math/SafeMath.sol
-pragma solidity ^0.5.2;
+pragma solidity 0.5.6;
 
 /**
  * @title SafeMath
