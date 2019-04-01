@@ -2,10 +2,10 @@
 
 # Testonator
 
-This library provides a JSON-RPC wrapper to a standalone Ethereum blockchain, used for testing purposes. It uses Solidity 0.5.6. It also provides an wrapper for web3j, where contracts do not have to be generated into Java classes. If your contract looks like this:
+This library provides a JSON-RPC wrapper to a standalone Ethereum blockchain, used for testing purposes. It uses Solidity 0.5.7. It also provides an wrapper for web3j, where contracts do not have to be generated into Java classes. If your contract looks like this:
 
 ```
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.7;
                
 contract Example2 {
     uint256 public counter = 15;
@@ -38,14 +38,14 @@ Maven:
 <dependency>
     <groupId>io.iconator</groupId>
     <artifactId>testonator</artifactId>
-    <version>1.0.33</version>
+    <version>1.0.35</version>
 </dependency>
 ```
 
 Gradle:
 
 ```
-compile 'io.iconator:testonator:1.0.33'
+compile 'io.iconator:testonator:1.0.35'
 ```
 
 ## Example of JSON-RPC request
