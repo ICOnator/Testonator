@@ -1,4 +1,4 @@
-pragma solidity 0.5.6;
+pragma solidity 0.5.7;
 
 import "./SafeMath.sol";
 import "./Utils.sol";
@@ -129,6 +129,7 @@ contract DOS is ERC20, ERC865Plus677ish {
         require(_admin1 != owner);
         require(_admin2 != address(0));
         require(_admin2 != owner);
+        require(_admin1 != _admin2);
 
         admin1 = _admin1;
         admin2 = _admin2;
@@ -154,13 +155,12 @@ contract DOS is ERC20, ERC865Plus677ish {
         require(_recipients.length <= 255);
 
         for (uint8 i = 0; i < _recipients.length; i++) {
-            address recipient = _recipients[i];
             uint256 amount = _amounts[i];
-
-            balances[recipient] = balances[recipient].add(amount);
-
             totalSupply_ = totalSupply_.add(amount);
             require(totalSupply_ <= maxSupply); // enforce maximum token supply
+
+            address recipient = _recipients[i];
+            balances[recipient] = balances[recipient].add(amount);
 
             emit Transfer(address(0), recipient, amount);
         }
